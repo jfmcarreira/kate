@@ -25,6 +25,7 @@
 
 #include <KAboutData>
 #include <KLocalizedString>
+#include <KWindowSystem>
 #include <kdbusservice.h>
 
 #include <QByteArray>
@@ -265,6 +266,24 @@ extern "C" Q_DECL_EXPORT int kdemain(int argc, char **argv)
         if (!serviceName.isEmpty()) {
             QDBusReply<bool> there = sessionBusInterface->isServiceRegistered(serviceName);
             foundRunningService = there.isValid() && there.value();
+        }
+
+        if (foundRunningService) {
+          const int desktopnumber = KWindowSystem::currentDesktop();
+          int sessionDesktopNumber = -1;
+          QDBusMessage m = QDBusMessage::createMethodCall(serviceName,
+              QStringLiteral("/MainApplication"), QStringLiteral("org.kde.Kate.Application"), QStringLiteral("desktopNumber"));
+
+          QDBusMessage res = QDBusConnection::sessionBus().call(m);
+          QList<QVariant> answer = res.arguments();
+          if( answer.size() == 1 )
+          {
+            sessionDesktopNumber = answer.at( 0 ).toInt();
+            if( sessionDesktopNumber !=  desktopnumber )
+            {
+              foundRunningService = false;
+            }
+          }
         }
 
         if (foundRunningService) {
