@@ -90,6 +90,8 @@ public Q_SLOTS:
      */
     bool activateSession(QString session);
 
+    int desktopNumber();
+
     /**
      * activate this kate instance
      */
