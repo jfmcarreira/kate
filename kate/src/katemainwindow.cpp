@@ -828,14 +828,14 @@ void KateMainWindow::slotOpenWithMenuAction(QAction *a)
         // display "open with" dialog
         KOpenWithDialog dlg(list);
         if (dlg.exec()) {
-            KRun::run(*dlg.service(), list, this);
+            KRun::runService(*dlg.service(), list, this);
         }
         return;
     }
 
     KService::Ptr app = KService::serviceByDesktopPath(openWith);
     if (app) {
-        KRun::run(*app, list, this);
+        KRun::runService(*app, list, this);
     } else {
         KMessageBox::error(this, i18n("Application '%1' not found.", openWith), i18n("Application not found"));
     }
@@ -1034,8 +1034,9 @@ void KateMainWindow::queueModifiedOnDisc(KTextEditor::Document *doc)
     if (!m_modNotification) {
         return;
     }
+    bool modOnDisk = (uint)KateApp::self()->documentManager()->documentInfo(doc)->modifiedOnDisc;
 
-    if (s_modOnHdDialog == 0) {
+    if (s_modOnHdDialog == 0 && modOnDisk) {
         DocVector list;
         list.append(doc);
 
@@ -1045,7 +1046,7 @@ void KateMainWindow::queueModifiedOnDisc(KTextEditor::Document *doc)
         s_modOnHdDialog->exec();
         delete s_modOnHdDialog; // s_modOnHdDialog is set to 0 in destructor of KateMwModOnHdDialog (jowenn!!!)
         m_modignore = false;
-    } else {
+    } else if (s_modOnHdDialog != 0) {
         s_modOnHdDialog->addDocument(doc);
     }
 }
