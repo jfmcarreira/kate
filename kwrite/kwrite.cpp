@@ -87,7 +87,7 @@ KWrite::KWrite(KTextEditor::Document *doc)
     setupActions();
 
     // signals for the statusbar
-    connect(m_view->document(), SIGNAL(modifiedChanged(KTextEditor::Document*)), this, SLOT(documentNameChanged()));
+    connect(m_view->document(), &KTextEditor::Document::modifiedChanged, this, &KWrite::modifiedChanged);
     connect(m_view->document(), SIGNAL(documentNameChanged(KTextEditor::Document*)), this, SLOT(documentNameChanged()));
     connect(m_view->document(), SIGNAL(readWriteChanged(KTextEditor::Document*)), this, SLOT(documentNameChanged()));
     connect(m_view->document(), SIGNAL(documentUrlChanged(KTextEditor::Document*)), this, SLOT(urlChanged()));
@@ -144,8 +144,9 @@ QSize KWrite::sizeHint () const
 
 void KWrite::setupActions()
 {
-    actionCollection()->addAction(KStandardAction::Close, QStringLiteral("file_close"), this, SLOT(slotFlush()))
-    ->setWhatsThis(i18n("Use this command to close the current document"));
+    m_closeAction = actionCollection()->addAction(KStandardAction::Close, QStringLiteral("file_close"), this, SLOT(slotFlush()));
+    m_closeAction->setWhatsThis(i18n("Use this command to close the current document"));
+    m_closeAction->setDisabled(true);
 
     // setup File menu
     actionCollection()->addAction(KStandardAction::New, QStringLiteral("file_new"), this, SLOT(slotNew()))
@@ -175,7 +176,7 @@ void KWrite::setupActions()
     actionCollection()->addAction(m_paShowStatusBar->objectName(), m_paShowStatusBar);
     m_paShowStatusBar->setWhatsThis(i18n("Use this command to show or hide the view's statusbar"));
 
-    m_paShowPath = new KToggleAction(i18n("Sho&w Path"), this);
+    m_paShowPath = new KToggleAction(i18n("Sho&w Path in Titlebar"), this);
     actionCollection()->addAction(QStringLiteral("set_showPath"), m_paShowPath);
     connect(m_paShowPath, SIGNAL(triggered()), this, SLOT(documentNameChanged()));
     m_paShowPath->setWhatsThis(i18n("Show the complete document path in the window caption"));
@@ -202,6 +203,7 @@ void KWrite::loadURL(const QUrl &url)
     m_activityResource->setUri(url);
 #endif
     m_view->document()->openUrl(url);
+    m_closeAction->setEnabled(true);
 }
 
 // is closing the window wanted by user ?
@@ -222,7 +224,15 @@ bool KWrite::queryClose()
 
 void KWrite::slotFlush()
 {
-    m_view->document()->closeUrl();
+    if (m_view->document()->closeUrl()) {
+        m_closeAction->setDisabled(true);
+    }
+}
+
+void KWrite::modifiedChanged()
+{
+    documentNameChanged();
+    m_closeAction->setEnabled(true);
 }
 
 void KWrite::slotNew()
@@ -500,24 +510,31 @@ void KWrite::documentNameChanged()
 
     if (m_view->document()->url().isEmpty()) {
         setCaption(i18n("Untitled") + readOnlyCaption + QStringLiteral(" [*]"), m_view->document()->isModified());
-    } else {
-        QString c;
-        if (!m_paShowPath->isChecked()) {
-            c = m_view->document()->url().fileName();
+        return;
+    }
 
-            //File name shouldn't be too long - Maciek
-            if (c.length() > 64) {
-                c = c.left(64) + QStringLiteral("...");
-            }
-        } else {
-            c = m_view->document()->url().toString();
+    QString c;
 
-            //File name shouldn't be too long - Maciek
-            if (c.length() > 64) {
-                c = QStringLiteral("...") + c.right(64);
-            }
+    if (m_paShowPath->isChecked()) {
+        c = m_view->document()->url().toString(QUrl::PreferLocalFile);
+
+        const QString homePath = QDir::homePath();
+        if (c.startsWith(homePath)) {
+            c = QStringLiteral("~") + c.right(c.length() - homePath.length());
         }
 
-        setCaption(c + readOnlyCaption + QStringLiteral(" [*]"), m_view->document()->isModified());
+        //File name shouldn't be too long - Maciek
+        if (c.length() > 64) {
+            c = QStringLiteral("...") + c.right(64);
+        }
+    } else {
+        c = m_view->document()->url().fileName();
+
+        //File name shouldn't be too long - Maciek
+        if (c.length() > 64) {
+            c = c.left(64) + QStringLiteral("...");
+        }
     }
+
+    setCaption(c + readOnlyCaption + QStringLiteral(" [*]"), m_view->document()->isModified());
 }

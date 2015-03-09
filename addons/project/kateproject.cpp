@@ -36,6 +36,7 @@
 
 KateProject::KateProject(ThreadWeaver::Queue *weaver)
     : QObject()
+    , m_fileLastModified()
     , m_notesDocument(nullptr)
     , m_untrackedDocumentsRoot(nullptr)
     , m_weaver(weaver)
@@ -73,11 +74,13 @@ bool KateProject::reload(bool force)
     /**
      * open the file for reading, bail out on error!
      */
+    m_fileLastModified = QDateTime();
     QFile file(m_fileName);
     if (!file.open(QFile::ReadOnly)) {
         return false;
     }
 
+    m_fileLastModified = QFileInfo(m_fileName).lastModified();
     /**
      * parse the whole file, bail out again on error!
      */
@@ -370,10 +373,10 @@ void KateProject::unregisterDocument(KTextEditor::Document *document)
         KateProjectItem *item = static_cast<KateProjectItem *>(itemForFile(file));
         if (item && item->data(Qt::UserRole + 3).toBool()) {
             unregisterUntrackedItem(item);
+            m_file2Item->remove(file);
         }
     }
 
-    m_file2Item->remove(file);
     m_documents.remove(document);
 }
 
