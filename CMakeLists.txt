@@ -40,6 +40,7 @@ endif()
 # Load the frameworks we need
 find_package(KF5 "${KF5_DEP_VERSION}" REQUIRED COMPONENTS
   Config
+  Crash
   DocTools
   GuiAddons
   I18n
@@ -50,6 +51,7 @@ find_package(KF5 "${KF5_DEP_VERSION}" REQUIRED COMPONENTS
   TextEditor
   WindowSystem
   XmlGui
+  IconThemes
 )
 
 # use sane compile flags

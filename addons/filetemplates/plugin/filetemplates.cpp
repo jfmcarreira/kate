@@ -32,7 +32,6 @@
 #include <kdirwatch.h>
 #include <kfiledialog.h>
 #include <kicondialog.h>
-#include <kiconloader.h>
 #include <kio/netaccess.h>
 #include <klineedit.h>
 #include <klocalizedstring.h>
@@ -70,7 +69,6 @@
 
 #include <kpluginfactory.h>
 #include <kpluginloader.h>
-#include <kaboutdata.h>
 #include <kmenu.h>
 //END Includes
 

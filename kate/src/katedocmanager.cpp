@@ -32,7 +32,6 @@
 #include <KCodecs>
 #include <KMessageBox>
 #include <KIO/DeleteJob>
-#include <KIconLoader>
 #include <KColorScheme>
 #include <KLocalizedString>
 #include <KConfigGroup>
@@ -253,7 +252,7 @@ bool KateDocManager::closeDocuments(const QList<KTextEditor::Document *> documen
 
     /**
      * never ever empty the whole document list
-     * do this before documentsDeleted is emited, to have no flicker
+     * do this before documentsDeleted is emitted, to have no flicker
      */
     if (m_docList.isEmpty()) {
         createDoc();

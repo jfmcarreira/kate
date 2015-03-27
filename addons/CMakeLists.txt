@@ -1,4 +1,4 @@
-# detect aditional frameworks
+# detect additional frameworks
 find_package(KF5 "${KF5_DEP_VERSION}" OPTIONAL_COMPONENTS Wallet Plasma Service ItemModels Notifications ThreadWeaver NewStuff)
 
 set_package_properties(KF5Wallet PROPERTIES PURPOSE "Required to build the katesql addon")
@@ -65,6 +65,9 @@ endif()
 
 # list symbols and functions in a file
 ecm_optional_add_subdirectory (symbolviewer)
+
+# replicode integration
+ecm_optional_add_subdirectory (replicode)
 
 #add_subdirectory( textfilter )
 

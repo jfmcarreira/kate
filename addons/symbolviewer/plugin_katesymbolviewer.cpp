@@ -49,7 +49,6 @@
 #include <kaboutdata.h>
 #include <ktoggleaction.h>
 #include <KActionCollection>
-#include <kiconloader.h>
 #include <KXMLGUIFactory>
 #include <KConfigGroup>
 #include <KSharedConfig>
@@ -125,6 +124,7 @@ KatePluginSymbolViewerView::KatePluginSymbolViewerView(KTextEditor::Plugin *plug
   m_symbols = new QTreeWidget();
   m_symbols->setLayoutDirection( Qt::LeftToRight );
   layout->addWidget(m_symbols, 10);
+  layout->setContentsMargins(0,0,0,0);
 
   connect(m_symbols, SIGNAL(itemActivated(QTreeWidgetItem*,int)), this, SLOT(goToSymbol(QTreeWidgetItem*)));
   connect(m_symbols, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(slotShowContextMenu(QPoint)));

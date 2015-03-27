@@ -21,7 +21,6 @@
 
 #include "kateconsole.h"
 
-#include <kiconloader.h>
 #include <klocalizedstring.h>
 #include <ktexteditor/document.h>
 #include <ktexteditor/view.h>
@@ -92,7 +91,7 @@ KateKonsolePluginView::KateKonsolePluginView (KateKonsolePlugin* plugin, KTextEd
     : QObject(mainWindow),m_plugin(plugin)
 {
   // init console
-  QWidget *toolview = mainWindow->createToolView (plugin, QStringLiteral("kate_private_plugin_katekonsoleplugin"), KTextEditor::MainWindow::Bottom, SmallIcon(QStringLiteral("utilities-terminal")), i18n("Terminal"));
+  QWidget *toolview = mainWindow->createToolView (plugin, QStringLiteral("kate_private_plugin_katekonsoleplugin"), KTextEditor::MainWindow::Bottom, QIcon::fromTheme(QStringLiteral("utilities-terminal")), i18n("Terminal"));
   m_console = new KateConsole(m_plugin, mainWindow, toolview);
   
   // register this view
@@ -225,7 +224,7 @@ void KateConsole::cd (const QString & path)
     return;
 
   m_currentPath = path;
-  QString command = QStringLiteral("cd ") + KShell::quoteArg(m_currentPath) + QLatin1Char('\n');
+  QString command = QStringLiteral(" cd ") + KShell::quoteArg(m_currentPath) + QLatin1Char('\n');
 
   // special handling for some interpreters
   TerminalInterface *t = qobject_cast<TerminalInterface *>(m_part);
