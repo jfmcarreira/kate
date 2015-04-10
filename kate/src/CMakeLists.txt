@@ -53,7 +53,8 @@ PUBLIC
     KF5::WindowSystem
     KF5::GuiAddons
     KF5::DBusAddons
-    KF5::Crash)
+    KF5::Crash
+    KF5::Activities)
 
 generate_export_header(kdeinit_kate
   EXPORT_FILE_NAME kateprivate_export.h

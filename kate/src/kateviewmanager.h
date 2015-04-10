@@ -26,15 +26,14 @@
 #include <QPointer>
 #include <QList>
 #include <QSplitter>
+#include <QMap>
 
 #include <config.h>
 
-#ifdef KActivities_FOUND
 namespace KActivities
 {
     class ResourceInstance;
 }
-#endif
 
 namespace KTextEditor {
     class View;
@@ -251,12 +250,26 @@ public Q_SLOTS:
     void toggleSplitterOrientation();
 
     /**
-     * central storage of all views known in the view manager
-     * maps the view to active state + lru age of the view
-     * important: smallest age ==> latest used view
+     * Get a list of all views.
+     * @return all views
      */
-    const QHash<KTextEditor::View *, QPair<bool, qint64> > &views() const {
-        return m_views;
+    QList<KTextEditor::View *> views() const {
+        return m_views.keys();
+    }
+
+    /**
+     * get views in lru order
+     * @return views in lru order
+     */
+    QList<KTextEditor::View *> sortedViews() const
+    {
+        QMap<qint64, KTextEditor::View *> sortedViews;
+        QHashIterator<KTextEditor::View *, ViewData> i(m_views);
+        while (i.hasNext()) {
+            i.next();
+            sortedViews[i.value().lruAge] = i.key();
+        }
+        return sortedViews.values();
     }
 
 private:
@@ -274,10 +287,6 @@ private:
 
     QList<KateViewSpace *> m_viewSpaceList;
 
-#ifdef KActivities_FOUND
-    QHash<KTextEditor::View *, KActivities::ResourceInstance *> m_activityResources;
-#endif
-
     bool m_blockViewCreationAndActivation;
 
     bool m_activeViewRunning;
@@ -285,11 +294,42 @@ private:
     int m_splitterIndex; // used during saving splitter config.
 
     /**
-     * central storage of all views known in the view manager
-     * maps the view to active state + lru age of the view
-     * important: smallest age ==> latest used view
+     * View meta data
      */
-    QHash<KTextEditor::View *, QPair<bool, qint64> > m_views;
+    class ViewData {
+        public:
+            /**
+             * Default constructor
+             */
+            ViewData()
+                : active(false)
+                , lruAge(0)
+                , activityResource(Q_NULLPTR)
+            {
+            }
+            
+            /**
+             * view active?
+             */
+            bool active;
+            
+            /**
+             * lru age of the view
+             * important: smallest age ==> latest used view
+             */
+            qint64 lruAge;
+            
+            /**
+             * activity resource for the view
+             */
+            KActivities::ResourceInstance *activityResource;
+    };
+    
+    /**
+     * central storage of all views known in the view manager
+     * maps the view to meta data
+     */
+    QHash<KTextEditor::View *, ViewData> m_views;
 
     /**
      * current minimal age

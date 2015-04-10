@@ -39,9 +39,7 @@
 #include <KLocalizedString>
 #include <KXMLGUIFactory>
 
-#ifdef KActivities_FOUND
-#include <kactivities/resourceinstance.h>
-#endif
+#include <KActivities/ResourceInstance>
 
 #include <QFileDialog>
 #include <QStyle>
@@ -76,13 +74,13 @@ KateViewManager::KateViewManager(QWidget *parentW, KateMainWindow *parent)
     connect(this, SIGNAL(viewChanged(KTextEditor::View*)), this, SLOT(slotViewChanged()));
 
     connect(KateApp::self()->documentManager(), SIGNAL(documentCreatedViewManager(KTextEditor::Document*)), this, SLOT(documentCreated(KTextEditor::Document*)));
-    
+
     /**
      * before document is really deleted: cleanup all views!
      */
     connect(KateApp::self()->documentManager(), SIGNAL(documentWillBeDeleted(KTextEditor::Document*))
         , this, SLOT(documentWillBeDeleted(KTextEditor::Document*)));
- 
+
     /**
      * handle document deletion transactions
      * disable view creation in between
@@ -92,15 +90,15 @@ KateViewManager::KateViewManager(QWidget *parentW, KateMainWindow *parent)
         , this, SLOT(aboutToDeleteDocuments(const QList<KTextEditor::Document *> &)));
     connect(KateApp::self()->documentManager(), SIGNAL(documentsDeleted(const QList<KTextEditor::Document *> &))
         , this, SLOT(documentsDeleted(const QList<KTextEditor::Document *> &)));
-    
+
     // register all already existing documents
     m_blockViewCreationAndActivation = true;
-    
+
     const QList<KTextEditor::Document *> &docs = KateApp::self()->documentManager()->documentList();
     foreach(KTextEditor::Document * doc, docs) {
         documentCreated(doc);
     }
-    
+
     m_blockViewCreationAndActivation = false;
 
     // init done
@@ -362,7 +360,7 @@ void KateViewManager::documentCreated(KTextEditor::Document *doc)
     if (!activeView()) {
         activateView(doc);
     }
-    
+
     /**
      * check if we have any empty viewspaces and give them a view
      */
@@ -450,8 +448,12 @@ bool KateViewManager::createView(KTextEditor::Document *doc, KateViewSpace *vs)
 
     /**
      * remember this view, active == false, min age set
+     * create activity resource
      */
-    m_views[view] = QPair<bool, qint64> (false, m_minAge--);
+    m_views[view].active = false;
+    m_views[view].lruAge = m_minAge--;
+    m_views[view].activityResource = new KActivities::ResourceInstance(view->window()->winId(), view);
+    m_views[view].activityResource->setUri(doc->url());
 
     // disable settings dialog action
     delete view->actionCollection()->action(QStringLiteral("set_confdlg"));
@@ -461,12 +463,6 @@ bool KateViewManager::createView(KTextEditor::Document *doc, KateViewSpace *vs)
     connect(view, SIGNAL(focusIn(KTextEditor::View*)), this, SLOT(activateSpace(KTextEditor::View*)));
 
     viewCreated(view);
-
-#ifdef KActivities_FOUND
-    Q_ASSERT(!m_activityResources.contains(view)); // view was just created -> cannot be in hash
-    m_activityResources[view] = new KActivities::ResourceInstance(view->window()->winId(), view);
-    m_activityResources[view]->setUri(doc->url());
-#endif
 
     if (!vs) {
         activateView(view);
@@ -492,10 +488,6 @@ bool KateViewManager::deleteView(KTextEditor::View *view)
         mainWindow()->guiFactory()->removeClient(m_guiMergedView);
         m_guiMergedView = nullptr;
     }
-
-#ifdef KActivities_FOUND
-    m_activityResources.remove(view);
-#endif
 
     // remove view from mapping and memory !!
     m_views.remove(view);
@@ -530,10 +522,10 @@ KTextEditor::View *KateViewManager::activeView()
 
     m_activeViewRunning = true;
 
-    QHashIterator<KTextEditor::View *, QPair<bool, qint64> > it(m_views);
+    QHashIterator<KTextEditor::View *, ViewData> it(m_views);
     while (it.hasNext()) {
         it.next();
-        if (it.value().first) {
+        if (it.value().active) {
             m_activeViewRunning = false;
             return it.key();
         }
@@ -575,11 +567,11 @@ void KateViewManager::setActiveSpace(KateViewSpace *vs)
 void KateViewManager::setActiveView(KTextEditor::View *view)
 {
     if (activeView()) {
-        m_views[activeView()].first = false;
+        m_views[activeView()].active = false;
     }
 
     if (view) {
-        m_views[view].first = true;
+        m_views[view].active = true;
     }
 }
 
@@ -601,7 +593,7 @@ void KateViewManager::reactivateActiveView()
 {
     KTextEditor::View *view = activeView();
     if (view) {
-        m_views[view].first = false;
+        m_views[view].active = false;
         activateView(view);
     }
 }
@@ -612,18 +604,11 @@ void KateViewManager::activateView(KTextEditor::View *view)
         return;
     }
 
-#ifdef KActivities_FOUND
-    if (m_activityResources.contains(view)) {
-        m_activityResources[view]->setUri(view->document()->url());
-        m_activityResources[view]->notifyFocusedIn();
-    }
-#endif
-
     Q_ASSERT (m_views.contains(view));
-    if (!m_views[view].first) {
+    if (!m_views[view].active) {
         // avoid flicker
         KateUpdateDisabler disableUpdates (mainWindow());
-        
+
         if (!activeViewSpace()->showView(view)) {
             // since it wasn't found, give'em a new one
             createView(view->document());
@@ -653,9 +638,13 @@ void KateViewManager::activateView(KTextEditor::View *view)
         }
 
         // remember age of this view
-        m_views[view].second = m_minAge--;
-
+        m_views[view].lruAge = m_minAge--;
+        
         emit viewChanged(view);
+        
+        // inform activity manager
+        m_views[view].activityResource->setUri(view->document()->url());
+        m_views[view].activityResource->notifyFocusedIn();
     }
 }
 
@@ -719,7 +708,7 @@ void KateViewManager::documentWillBeDeleted(KTextEditor::Document *doc)
             closeList.append(v);
         }
     }
-    
+
     while (!closeList.isEmpty()) {
         deleteView(closeList.takeFirst());
     }
@@ -746,7 +735,7 @@ void KateViewManager::splitViewSpace(KateViewSpace *vs,  // = 0
     if (!currentSplitter) {
         return;
     }
-    
+
     // avoid flicker
     KateUpdateDisabler disableUpdates (mainWindow());
 
@@ -821,7 +810,7 @@ void KateViewManager::toggleSplitterOrientation()
     if (!currentSplitter || (currentSplitter->count() == 1)) {
         return;
     }
-    
+
     // avoid flicker
     KateUpdateDisabler disableUpdates (mainWindow());
 
@@ -996,15 +985,11 @@ void KateViewManager::restoreViewConfiguration(const KConfigGroup &config)
      */
     qDeleteAll(m_viewSpaceList);
     m_viewSpaceList.clear();
-    
+
     /**
      * delete mapping of now deleted views
      */
     m_views.clear();
-
-#ifdef KActivities_FOUND
-    m_activityResources.clear();
-#endif
 
     // reset lru history, too!
     m_minAge = 0;

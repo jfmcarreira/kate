@@ -5,6 +5,8 @@ find_package(KF5 REQUIRED COMPONENTS DBusAddons)
 
 set(kwrite_KDEINIT_SRCS main.cpp kwrite.cpp)
 
+
+
 kf5_add_kdeinit_executable(kwrite ${kwrite_KDEINIT_SRCS})
 target_link_libraries(kdeinit_kwrite
   KF5::TextEditor
@@ -13,6 +15,7 @@ target_link_libraries(kdeinit_kwrite
   KF5::DBusAddons
   KF5::IconThemes
   KF5::Crash
+  KF5::Activities
 )
 
 install(TARGETS kwrite         ${KDE_INSTALL_TARGETS_DEFAULT_ARGS})
