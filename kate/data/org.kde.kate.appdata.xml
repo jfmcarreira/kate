@@ -14,6 +14,7 @@
   <name xml:lang="fi">Kate</name>
   <name xml:lang="gl">Kate</name>
   <name xml:lang="hu">Kate</name>
+  <name xml:lang="ia">Kate</name>
   <name xml:lang="it">Kate</name>
   <name xml:lang="ko">Kate</name>
   <name xml:lang="nb">Kate</name>
@@ -45,6 +46,7 @@
   <summary xml:lang="fi">Kehittynyt tekstimuokkain</summary>
   <summary xml:lang="gl">Editor avanzado de textos</summary>
   <summary xml:lang="hu">Speciális szövegszerkesztő</summary>
+  <summary xml:lang="ia">Editor avantiate de texto</summary>
   <summary xml:lang="it">Editor di testi avanzato</summary>
   <summary xml:lang="ko">고급 텍스트 편집기</summary>
   <summary xml:lang="nb">Avansert skriveprogram</summary>
@@ -72,6 +74,7 @@
       dynamic word wrap, an embedded console, an extensive plugin interface and some preliminary scripting support.
     </p>
     <p xml:lang="ca">El Kate és un editor de text multidocument, i multivista pel KDE. Té funcionalitats com el plegat de codi, ressaltat de sintaxi, ajust dinàmic de les paraules, una consola incrustada, una interfície extensa de connectors i una implementació preliminar per crear scripts.</p>
+    <p xml:lang="de">Kate ist ein KDE-Editor für mehrere Dokumente und Ansichten. Funktionen wie Quelltextausblendung, Syntaxhervorhebung, dynamischer Zeilenumbruch, eine eingebettete Konsole und eine umfangreiche Schnittstelle für Module sowie vorläufige Unterstützung für Skripte sind enthalten.</p>
     <p xml:lang="en-GB">Kate is a multi-document, multi-view text editor for KDE. It features stuff like codefolding, syntaxhighlighting, dynamic word wrap, an embedded console, an extensive plugin interface and some preliminary scripting support.</p>
     <p xml:lang="es">Kate es un editor de texto para KDE que puede abrir varios documentos a la vez y que cuenta con varios modos de vista. Entre otras funcionalidades dispone de plegado de código, resaltado de sintaxis, justificado de línea dinámico, consola integrada, una amplia interfaz para complementos y admite scripts de manera preliminar.</p>
     <p xml:lang="fi">Kate on usean tiedoston ja usean näkymän tekstimuokkain eli tekstieditori KDE:lle. Siinä on koodin laskostus, syntaksin korostus, dynaaminen rivitys, upotettu konsoli, kattava liitännäisrajapinta sekä alustava skriptaustuki.</p>
@@ -106,6 +109,7 @@
     <p xml:lang="fi">Ominaisuuksia:</p>
     <p xml:lang="gl">Funcionalidades:</p>
     <p xml:lang="hu">Szolgáltatások:</p>
+    <p xml:lang="ia">Characteristicas:</p>
     <p xml:lang="it">Funzionalità:</p>
     <p xml:lang="ko">기능:</p>
     <p xml:lang="nb">Funksjoner:</p>
@@ -130,6 +134,7 @@
     <ul>
       <li>MDI, window splitting, window tabbing</li>
       <li xml:lang="ca">MDI, divisió de finestres, canvi de finestres per pestanyes</li>
+      <li xml:lang="de">MDI (Multiple Document Interface = Benutzeroberfläche mit mehreren gleichzeitig geöffneten Dokumenten), geteilte Fenster, Unterfenster</li>
       <li xml:lang="en-GB">MDI, window splitting, window tabbing</li>
       <li xml:lang="es">MDI, división de ventana, pestañas de ventana</li>
       <li xml:lang="fi">Monen tiedoston käyttöliittymä (MDI), ikkunoiden jakaminen ja välilehdet</li>
@@ -165,6 +170,7 @@
       <li xml:lang="fi">Oikeinkirjoituksen tarkistus</li>
       <li xml:lang="gl">Corrección ortográfica.</li>
       <li xml:lang="hu">Helyesírás-ellenőrzés</li>
+      <li xml:lang="ia">Controlo Orthographic</li>
       <li xml:lang="it">Controllo ortografico</li>
       <li xml:lang="ko">맞춤법 검사</li>
       <li xml:lang="nb">Stavekontroll</li>

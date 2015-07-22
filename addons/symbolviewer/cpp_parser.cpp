@@ -93,11 +93,11 @@ void KatePluginSymbolViewerView::parseCppSymbols(void)
                      macro = 2;
                      j += 6; // skip the word "define"
                     }
-              if(macro == 2 && j<cl.length() &&cl.at(j) != QLatin1Char(' ')) macro = 3;
+              if(macro == 2 && j<cl.length() && cl.at(j) != QLatin1Char(' ') && cl.at(j) != QLatin1Char('\t')) macro = 3;
               if(macro == 3)
                 {
                  if (cl.at(j) >= 0x20) stripped += cl.at(j);
-                 if (cl.at(j) == QLatin1Char(' ') || j == cl.length() - 1)
+                 if (cl.at(j) == QLatin1Char(' ') || cl.at(j) == QLatin1Char('\t') || j == cl.length() - 1)
                          macro = 4;
                 }
               //qDebug(13000)<<"Macro -- Stripped : "<<stripped<<" macro = "<<macro;
@@ -187,7 +187,18 @@ void KatePluginSymbolViewerView::parseCppSymbols(void)
             {
              if ( ((j+1) < cl.length()) && (cl.at(j) == QLatin1Char('/') && (cl.at(j + 1) == QLatin1Char('*')) && comment != 3)) comment = 2;
              if ( ((j+1) < cl.length()) && (cl.at(j) == QLatin1Char('*') && (cl.at(j + 1) == QLatin1Char('/')) && comment != 3) )
-                   {  comment = 0; j+=2; if (j>=cl.length()) break;}
+               {  comment = 0; j+=2; if (j>=cl.length()) break;}
+             // Skip escaped double quotes
+             if ( ((j+1) < cl.length()) && (cl.at(j) == QLatin1Char('\\') && (cl.at(j + 1) == QLatin1Char('"')) && comment == 3) )
+               { j+=2; if (j>=cl.length()) break;}
+
+             // Skip char declarations that could be interpreted as range start/end
+             if ( ((cl.indexOf(QStringLiteral("'\"'"), j) == j) ||
+                 (cl.indexOf(QStringLiteral("'{'"), j) == j) ||
+                 (cl.indexOf(QStringLiteral("'}'"), j) == j)) && comment != 3 )
+               { j+=3; if (j>=cl.length()) break;}
+
+
              // Handles a string. Those are freaking evilish !
              if (cl.at(j) == QLatin1Char('"') && comment == 3) { comment = 0; j++; if (j>=cl.length()) break;}
              else if (cl.at(j) == QLatin1Char('"') && comment == 0) comment = 3;

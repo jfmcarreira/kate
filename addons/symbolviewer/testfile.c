@@ -56,4 +56,18 @@ RockType *
      } 
 }
 
- }
+// Test escaped quote
+void test() { printf("foo \"\n"); }
+void test2() { printf("foo \"\n"); }
+
+// Test tabs in macro
+#define MY_MACRO(x) foo(x)
+#define MY_MACRO2(x)	foo(x)
+#define	MY_MACRO3(x)	foo(x)
+
+// Test quoted characters ('"', '{', '}')
+void quoteTest1() { if (token == '"') printf("foo\n"); }
+void quoteTest2() { if (token == '{') printf("foo\n"); }
+void quoteTest3() { if (token == '}') printf("foo\n"); }
+void quoteTest4() { printf("foo\n"); }
+
