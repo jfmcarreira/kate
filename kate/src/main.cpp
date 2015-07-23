@@ -261,35 +261,45 @@ extern "C" Q_DECL_EXPORT int kdemain(int argc, char **argv)
             }
         }
 
+        // choose amoung different existing instances
+        bool foundRunningService = false;
         if ((!force_new) && (serviceName.isEmpty())) {
-            if (kateServices.count() > 0) {
-                serviceName = kateServices[0];
+            int desktopnumber;
+            int sessionDesktopNumber;
+            for( int s = 0; s < kateServices.count(); s++) {
+
+                serviceName = kateServices[s];
+
+                foundRunningService = false;
+                if (!serviceName.isEmpty()) {
+                    QDBusReply<bool> there = sessionBusInterface->isServiceRegistered(serviceName);
+                    foundRunningService = there.isValid() && there.value();
+                }
+
+                if (foundRunningService) {
+                    desktopnumber = KWindowSystem::currentDesktop();
+                    sessionDesktopNumber = -1;
+                    QDBusMessage m = QDBusMessage::createMethodCall(serviceName,
+                            QStringLiteral("/MainApplication"), QStringLiteral("org.kde.Kate.Application"), QStringLiteral("desktopNumber"));
+
+                    QDBusMessage res = QDBusConnection::sessionBus().call(m);
+                    QList<QVariant> answer = res.arguments();
+                    if( answer.size() == 1 ) {
+                        sessionDesktopNumber = answer.at( 0 ).toInt();
+                        if( sessionDesktopNumber ==  desktopnumber ) {
+                            break;
+                        }
+                    }
+                }
+                serviceName.clear();
             }
         }
 
         //check again if service is still running
-        bool foundRunningService = false;
+        foundRunningService = false;
         if (!serviceName.isEmpty()) {
             QDBusReply<bool> there = sessionBusInterface->isServiceRegistered(serviceName);
             foundRunningService = there.isValid() && there.value();
-        }
-
-        if (foundRunningService) {
-          const int desktopnumber = KWindowSystem::currentDesktop();
-          int sessionDesktopNumber = -1;
-          QDBusMessage m = QDBusMessage::createMethodCall(serviceName,
-              QStringLiteral("/MainApplication"), QStringLiteral("org.kde.Kate.Application"), QStringLiteral("desktopNumber"));
-
-          QDBusMessage res = QDBusConnection::sessionBus().call(m);
-          QList<QVariant> answer = res.arguments();
-          if( answer.size() == 1 )
-          {
-            sessionDesktopNumber = answer.at( 0 ).toInt();
-            if( sessionDesktopNumber !=  desktopnumber )
-            {
-              foundRunningService = false;
-            }
-          }
         }
 
         if (foundRunningService) {
