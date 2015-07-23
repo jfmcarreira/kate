@@ -26,6 +26,7 @@
 #include <KCmdLineArgs>
 #include <KAboutData>
 #include <KStartupInfo>
+#include <KWindowSystem>
 #include <kdebug.h>
 
 #include <QTextCodec>
@@ -231,8 +232,7 @@ extern "C" KDE_EXPORT int kdemain( int argc, char **argv )
           }
           if (foundRunningService)
           {
-              //desktopnumber = KWindowSystem::currentDesktop();
-              desktopnumber = 1;
+              desktopnumber = KWindowSystem::currentDesktop();
               sessionDesktopNumber = -1;
               QDBusMessage m = QDBusMessage::createMethodCall(serviceName,
                       QLatin1String("/MainApplication"), "org.kde.Kate.Application", "desktopNumber");
