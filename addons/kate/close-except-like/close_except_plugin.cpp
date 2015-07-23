@@ -47,7 +47,7 @@ K_EXPORT_PLUGIN(
             "katecloseexceptplugin"
           , "katecloseexceptplugin"
           , ki18n("Close Except/Like Plugin")
-          , PLUGIN_VERSION
+          , "0.3.5"
           , ki18n("Close all documents started from specified path")
           , KAboutData::License_LGPL_V3
           )
