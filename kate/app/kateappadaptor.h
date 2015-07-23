@@ -94,6 +94,8 @@ class KateAppAdaptor : public QDBusAbstractAdaptor
      */
     void activate ();
     
+    int desktopNumber();
+    
   Q_SIGNALS:
     /**
      * Notify the world that this kate instance is exiting.

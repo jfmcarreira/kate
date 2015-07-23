@@ -100,6 +100,13 @@ QString KateAppAdaptor::activeSession()
   return m_app->sessionManager()->activeSession()->sessionName();
 }
 
+int KateAppAdaptor::desktopNumber()
+{
+  KWindowInfo appInfo(m_app->activeMainWindow()->winId(), NET::WMDesktop  );
+  return appInfo.desktop();
+}
+
+
 void KateAppAdaptor::emitExiting ()
 {
   emit exiting (); 

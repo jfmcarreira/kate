@@ -231,7 +231,8 @@ extern "C" KDE_EXPORT int kdemain( int argc, char **argv )
           }
           if (foundRunningService)
           {
-              desktopnumber = KWindowSystem::currentDesktop();
+              //desktopnumber = KWindowSystem::currentDesktop();
+              desktopnumber = 1;
               sessionDesktopNumber = -1;
               QDBusMessage m = QDBusMessage::createMethodCall(serviceName,
                       QLatin1String("/MainApplication"), "org.kde.Kate.Application", "desktopNumber");
