@@ -28,7 +28,6 @@
 
 #include <KActionCollection>
 #include <KXMLGUIFactory>
-#include <KToolBar>
 #include <KLocalizedString>
 #include <KPluginFactory>
 
@@ -55,39 +54,26 @@ QObject *KateSnippetsPlugin::createView(KTextEditor::MainWindow *mainWindow)
 KateSnippetsPluginView::KateSnippetsPluginView(KateSnippetsPlugin *plugin, KTextEditor::MainWindow *mainWindow)
     : QObject(mainWindow), m_plugin(plugin), m_mainWindow(mainWindow), m_toolView(0), m_snippets(0)
 {
-    KXMLGUIClient::setComponentName(QLatin1String("katesnippets"), i18n("Snippets tool view"));
-    setXMLFile(QLatin1String("ui.rc"));
+    KXMLGUIClient::setComponentName(QStringLiteral("katesnippets"), i18n("Snippets tool view"));
+    setXMLFile(QStringLiteral("ui.rc"));
 
     // Toolview for snippets
-    m_toolView.reset(mainWindow->createToolView(0, QLatin1String("kate_private_plugin_katesnippetsplugin"),
+    m_toolView = mainWindow->createToolView(plugin, QStringLiteral("kate_private_plugin_katesnippetsplugin"),
                      KTextEditor::MainWindow::Right,
-                     QIcon::fromTheme(QLatin1String("document-new")),
-                     i18n("Snippets")));
+                     QIcon::fromTheme(QStringLiteral("document-new")),
+                     i18n("Snippets"));
 
-    m_toolView->setLayout(new QHBoxLayout());
     // add snippets widget
-    m_snippets.reset(KateSnippetGlobal::self()->snippetWidget());
-    m_snippets->setParent(m_toolView.data());
-    m_snippets->setupActionsForWindow(m_toolView.data());
-
-    // snippets toolbar
-    KToolBar *topToolbar = new KToolBar(m_toolView.data(), "snippetsToolBar");
-    topToolbar->setToolButtonStyle(Qt::ToolButtonIconOnly);
-    topToolbar->addActions(m_snippets->actions());
-    static_cast<QBoxLayout *>(m_toolView->layout())->insertWidget(0, topToolbar);
-
-    // register this view
-    m_plugin->mViews.append(this);
+    m_snippets = new SnippetView(KateSnippetGlobal::self(), m_toolView.data());
+    m_toolView->layout()->addWidget(m_snippets);
+    m_snippets->setupActionsForWindow(m_toolView);
+    m_toolView->addActions(m_snippets->actions());
 
     // create actions
-    QAction *a = actionCollection()->addAction(QLatin1String("tools_create_snippet"));
-    a->setIcon(QIcon::fromTheme(QLatin1String("document-new")));
+    QAction *a = actionCollection()->addAction(QStringLiteral("tools_create_snippet"));
+    a->setIcon(QIcon::fromTheme(QStringLiteral("document-new")));
     a->setText(i18n("Create Snippet"));
     connect(a, &QAction::triggered, this, &KateSnippetsPluginView::createSnippet);
-
-    a = actionCollection()->addAction(QLatin1String("tools_snippets"));
-    a->setText(i18n("Snippets..."));
-    connect(a, &QAction::triggered, this, &KateSnippetsPluginView::showSnippetsDialog);
 
     connect(mainWindow, &KTextEditor::MainWindow::viewCreated, this, &KateSnippetsPluginView::slotViewCreated);
 
@@ -117,8 +103,9 @@ KateSnippetsPluginView::~KateSnippetsPluginView()
 
     m_mainWindow->guiFactory()->removeClient(this);
 
-    // unregister this view
-    m_plugin->mViews.removeAll(this);
+    if (m_toolView) {
+        delete m_toolView;
+    }
 }
 
 void KateSnippetsPluginView::slotViewCreated(KTextEditor::View *view)
@@ -135,11 +122,6 @@ void KateSnippetsPluginView::slotViewCreated(KTextEditor::View *view)
 void KateSnippetsPluginView::createSnippet()
 {
     KateSnippetGlobal::self()->createSnippet(m_mainWindow->activeView());
-}
-
-void KateSnippetsPluginView::showSnippetsDialog()
-{
-    KateSnippetGlobal::self()->showDialog(m_mainWindow->activeView());
 }
 
 #include "katesnippets.moc"

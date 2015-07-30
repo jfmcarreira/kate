@@ -45,7 +45,6 @@ public:
 
 private:
     KateSnippetGlobal *m_snippetGlobal;
-    QList<KateSnippetsPluginView *> mViews;
 };
 
 class KateSnippetsPluginView : public QObject, public KXMLGUIClient
@@ -73,13 +72,12 @@ private Q_SLOTS:
     void slotViewCreated(KTextEditor::View *view);
 
     void createSnippet();
-    void showSnippetsDialog();
 
 private:
     KateSnippetsPlugin *m_plugin;
     KTextEditor::MainWindow *m_mainWindow;
-    QScopedPointer<QWidget> m_toolView;
-    QScopedPointer<SnippetView> m_snippets;
+    QPointer<QWidget> m_toolView;
+    SnippetView *m_snippets;
 
     /**
      * remember for which text views we might need to cleanup stuff

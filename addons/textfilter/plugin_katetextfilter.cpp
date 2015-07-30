@@ -16,71 +16,56 @@
  ***************************************************************************/
 
 #include "plugin_katetextfilter.h"
-#include "plugin_katetextfilter.moc"
 
 #include "ui_textfilterwidget.h"
 
 #include <ktexteditor/editor.h>
 #include <ktexteditor/message.h>
 
-#include <kdialog.h>
+#include <QDialog>
 #include <QAction>
-#include <kcomponentdata.h>
 #include <kmessagebox.h>
 #include <klocalizedstring.h>
-#include <cassert>
 #include <qstring.h>
 #include <klineedit.h>
-#include <kinputdialog.h>
 #include <kprocess.h>
 
-#include <kpluginfactory.h>
+#include <KPluginFactory>
 #include <kauthorized.h>
 #include <kactioncollection.h>
+#include <KXMLGUIFactory>
+#include <KConfigGroup>
+#include <KSharedConfig>
 
 #include <qapplication.h>
 #include <qclipboard.h>
 
-K_PLUGIN_FACTORY(PluginKateTextFilterFactory, registerPlugin<PluginKateTextFilter>();)
-K_EXPORT_PLUGIN(PluginKateTextFilterFactory("katetextfilter"))
+K_PLUGIN_FACTORY_WITH_JSON(TextFilterPluginFactory, "textfilterplugin.json", registerPlugin<PluginKateTextFilter>();)
 
-PluginViewKateTextFilter::PluginViewKateTextFilter(PluginKateTextFilter *plugin,
-                                                   Kate::MainWindow *mainwindow)
-  : Kate::PluginView(mainwindow)
-  , Kate::XMLGUIClient(PluginKateTextFilterFactory::componentData())
-  , m_plugin(plugin)
+PluginKateTextFilter::PluginKateTextFilter(QObject *parent, const QList<QVariant> &):
+    KTextEditor::Plugin(parent)
+    , m_pFilterProcess(Q_NULLPTR)
+    , copyResult(false)
+    , mergeOutput(false)
 {
-  KAction* a = actionCollection()->addAction("edit_filter");
-  a->setText(i18n("Filter Te&xt..."));
-  actionCollection()->setDefaultShortcut(a, Qt::CTRL + Qt::Key_Backslash);
-  connect(a, SIGNAL(triggered(bool)), plugin, SLOT(slotEditFilter()));
-
-  mainwindow->guiFactory()->addClient(this);
-}
-
-PluginViewKateTextFilter::~PluginViewKateTextFilter()
-{
-  mainWindow()->guiFactory()->removeClient (this);
-}
-
-PluginKateTextFilter::PluginKateTextFilter(QObject* parent, const QVariantList&)
-  : Kate::Plugin((Kate::Application *)parent, "kate-text-filter-plugin")
-  , KTextEditor::Command(QStringList dummy("textfilter"))
-  , m_pFilterProcess(NULL)
-  , copyResult(false)
-  , mergeOutput(true)
-{
+    // register command
+    new PluginKateTextFilterCommand(this);
 }
 
 PluginKateTextFilter::~PluginKateTextFilter()
 {
-  delete m_pFilterProcess;
+    // cleanup the process the right way (TM)
+    if (m_pFilterProcess) {
+        m_pFilterProcess->kill();
+        m_pFilterProcess->waitForFinished();
+        delete m_pFilterProcess;
+    }
 }
 
-
-Kate::PluginView *PluginKateTextFilter::createView (Kate::MainWindow *mainWindow)
+QObject *PluginKateTextFilter::createView (KTextEditor::MainWindow *mainWindow)
 {
-  return new PluginViewKateTextFilter(this, mainWindow);
+    // create a plugin view
+    return new PluginViewKateTextFilter(this, mainWindow);
 }
 
 void PluginKateTextFilter::slotFilterReceivedStdout()
@@ -100,7 +85,7 @@ void PluginKateTextFilter::slotFilterReceivedStderr ()
 
 void PluginKateTextFilter::slotFilterProcessExited(int, QProcess::ExitStatus)
 {
-  KTextEditor::View* kv(application()->activeMainWindow()->activeView());
+  KTextEditor::View* kv(KTextEditor::Editor::instance()->application()->activeMainWindow()->activeView());
   if (!kv) return;
 
   // Is there any error output to display?
@@ -164,31 +149,28 @@ static void slipInFilter(KProcess & proc, KTextEditor::View & view, QString comm
 
 void PluginKateTextFilter::slotEditFilter()
 {
-  if (!KAuthorized::authorizeKAction("shell_access")) {
+  if (!KAuthorized::authorizeKAction(QStringLiteral("shell_access"))) {
     KMessageBox::sorry(0,i18n(
         "You are not allowed to execute arbitrary external applications. If "
         "you want to be able to do this, contact your system administrator."),
         i18n("Access Restrictions"));
     return;
   }
-  if (!application()->activeMainWindow())
+  if (!KTextEditor::Editor::instance()->application()->activeMainWindow())
     return;
 
-  KTextEditor::View* kv(application()->activeMainWindow()->activeView());
+  KTextEditor::View* kv(KTextEditor::Editor::instance()->application()->activeMainWindow()->activeView());
   if (!kv) return;
 
-  KDialog dialog(application()->activeMainWindow()->window());
-  dialog.setCaption("Text Filter");
-  dialog.setButtons(KDialog::Cancel | KDialog::Ok);
-  dialog.setDefaultButton(KDialog::Ok);
+  QDialog dialog(KTextEditor::Editor::instance()->application()->activeMainWindow()->window());
 
-  QWidget* widget = new QWidget(&dialog);
   Ui::TextFilterWidget ui;
-  ui.setupUi(widget);
+  ui.setupUi(&dialog);
   ui.filterBox->setFocus();
-  dialog.setMainWidget(widget);
 
-  KConfigGroup config(KGlobal::config(), "PluginTextFilter");
+  dialog.setWindowTitle(i18n("Text Filter"));
+
+  KConfigGroup config(KSharedConfig::openConfig(), "PluginTextFilter");
   QStringList items = config.readEntry("Completion list", QStringList());
   copyResult = config.readEntry("Copy result", false);
   mergeOutput = config.readEntry("Merge output", true);
@@ -196,8 +178,6 @@ void PluginKateTextFilter::slotEditFilter()
   ui.filterBox->setHistoryItems(items, true);
   ui.copyResult->setChecked(copyResult);
   ui.mergeOutput->setChecked(mergeOutput);
-
-  connect(ui.filterBox, SIGNAL(activated(QString)), &dialog, SIGNAL(okClicked()));
 
   if (dialog.exec() == QDialog::Accepted) {
     copyResult = ui.copyResult->isChecked();
@@ -240,25 +220,61 @@ void PluginKateTextFilter::runFilter(KTextEditor::View *kv, const QString &filte
 }
 
 //BEGIN Kate::Command methods
-bool PluginKateTextFilter::help(KTextEditor::View *, const QString&, QString &msg)
+
+PluginKateTextFilterCommand::PluginKateTextFilterCommand(PluginKateTextFilter *plugin)
+  : KTextEditor::Command(QStringList() << QStringLiteral("textfilter"), plugin)
+  , m_plugin(plugin)
 {
-  msg = i18n("<qt><p>Usage: <code>textfilter COMMAND</code></p>"
-             "<p>Replace the selection with the output of the specified shell command.</p></qt>");
-  return true;
 }
 
-bool PluginKateTextFilter::exec(KTextEditor::View *v, const QString &cmd, QString &msg)
+bool PluginKateTextFilterCommand::exec (KTextEditor::View *view, const QString &cmd, QString &msg,
+                      const KTextEditor::Range &)
 {
-  QString filter = cmd.section(' ', 1).trimmed();
+  QString filter = cmd.section(QLatin1Char(' '), 1).trimmed();
 
   if (filter.isEmpty()) {
     msg = i18n("Usage: textfilter COMMAND");
     return false;
   }
 
-  runFilter(v, filter);
+  m_plugin->runFilter(view, filter);
   return true;
+}
+
+bool PluginKateTextFilterCommand::help (KTextEditor::View *, const QString &, QString &msg)
+{
+  msg = i18n("<qt><p>Usage: <code>textfilter COMMAND</code></p>"
+             "<p>Replace the selection with the output of the specified shell command.</p></qt>");
+  return true;
+
 }
 //END
 
-// kate: space-indent on; indent-width 2; replace-tabs on; mixed-indent off;
+
+PluginViewKateTextFilter::PluginViewKateTextFilter(PluginKateTextFilter *plugin,
+                                                   KTextEditor::MainWindow *mainwindow)
+  : QObject(mainwindow)
+  , m_mainWindow(mainwindow)
+{
+    // setup right xml gui data
+    KXMLGUIClient::setComponentName(QStringLiteral("textfilter"), i18n("Text Filter"));
+    setXMLFile(QStringLiteral("ui.rc"));
+
+    // create our one and only action
+    QAction* a = actionCollection()->addAction(QStringLiteral("edit_filter"));
+    a->setText(i18n("Filter Te&xt..."));
+    actionCollection()->setDefaultShortcut(a, Qt::CTRL + Qt::Key_Backslash);
+    connect(a, SIGNAL(triggered(bool)), plugin, SLOT(slotEditFilter()));
+
+    // register us at the UI
+    mainwindow->guiFactory()->addClient(this);
+}
+
+PluginViewKateTextFilter::~PluginViewKateTextFilter()
+{
+    // remove us from the UI again
+    m_mainWindow->guiFactory()->removeClient (this);
+}
+
+// required for TextFilterPluginFactory vtable
+#include "plugin_katetextfilter.moc"

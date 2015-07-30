@@ -18,34 +18,30 @@
 #ifndef PLUGIN_KATETEXTFILTER_H
 #define PLUGIN_KATETEXTFILTER_H
 
-#include <kate/plugin.h>
-#include <kate/application.h>
-#include <kate/documentmanager.h>
-#include <kate/mainwindow.h>
-
-#include <ktexteditor/view.h>
-#include <ktexteditor/document.h>
+#include <KTextEditor/Plugin>
+#include <KTextEditor/Application>
+#include <KTextEditor/MainWindow>
+#include <KTextEditor/View>
+#include <KTextEditor/Document>
 #include <KTextEditor/Command>
 
-#include <QProcess>
+#include <KProcess>
 #include <QVariantList>
 
-class KProcess;
-
-class PluginKateTextFilter : public Kate::Plugin, public KTextEditor::Command
+class PluginKateTextFilter : public KTextEditor::Plugin
 {
   Q_OBJECT
 
   public:
-    explicit PluginKateTextFilter(QObject* parent = 0, const QVariantList& = QVariantList() );
+    /**
+     * Plugin constructor.
+     */
+    explicit PluginKateTextFilter(QObject *parent = 0, const QList<QVariant> & = QList<QVariant>());
+
     virtual ~PluginKateTextFilter();
 
-    Kate::PluginView *createView (Kate::MainWindow *mainWindow);
+    QObject *createView(KTextEditor::MainWindow *mainWindow);
 
-    // Kate::Command
-    bool exec(KTextEditor::View *view, const QString &cmd, QString &msg);
-    bool help(KTextEditor::View *view, const QString &cmd, QString &msg);
-  private:
     void runFilter(KTextEditor::View *kv, const QString & filter);
 
   private:
@@ -63,18 +59,46 @@ class PluginKateTextFilter : public Kate::Plugin, public KTextEditor::Command
     void slotFilterProcessExited(int exitCode, QProcess::ExitStatus exitStatus);
 };
 
-class PluginViewKateTextFilter: public Kate::PluginView, public Kate::XMLGUIClient
+class PluginKateTextFilterCommand : public KTextEditor::Command
 {
-  Q_OBJECT
+   Q_OBJECT
 
-  public:
-    PluginViewKateTextFilter(PluginKateTextFilter *plugin, Kate::MainWindow *mainwindow);
-    virtual ~PluginViewKateTextFilter();
+public:
+   PluginKateTextFilterCommand (PluginKateTextFilter *plugin);
+    // Kate::Command
+    bool exec (KTextEditor::View *view, const QString &cmd, QString &msg,
+                      const KTextEditor::Range &range = KTextEditor::Range::invalid());
+    bool help (KTextEditor::View *view, const QString &cmd, QString &msg);
 
-  private:
+private:
     PluginKateTextFilter *m_plugin;
 };
 
-#endif // PLUGIN_KATETEXTFILTER_H
+/**
+ * Plugin view to merge the actions into the UI
+ */
+class PluginViewKateTextFilter: public QObject, public KXMLGUIClient
+{
+    Q_OBJECT
 
-// kate: space-indent on; indent-width 2; replace-tabs on; mixed-indent off;
+    public:
+        /**
+         * Construct plugin view
+         * @param plugin our plugin
+         * @param mainwindows the mainwindow for this view
+         */
+        explicit PluginViewKateTextFilter(PluginKateTextFilter *plugin, KTextEditor::MainWindow *mainwindow);
+
+        /**
+         * Our Destructor
+         */
+        virtual ~PluginViewKateTextFilter();
+
+    private:
+        /**
+         * the main window we belong to
+         */
+        KTextEditor::MainWindow *m_mainWindow;
+};
+
+#endif

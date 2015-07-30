@@ -28,7 +28,6 @@
 
 #include <KTextEditor/View>
 
-class SnippetView;
 class SnippetCompletionModel;
 class Snippet;
 
@@ -59,25 +58,12 @@ public:
      */
     SnippetCompletionModel *completionModel () { return m_model.data(); }
 
-    /**
-     * Create a new snippet widget, to allow to manage and insert snippets
-     * @return new snippet widget
-     */
-    SnippetView *snippetWidget ();
-
 public Q_SLOTS:
     /**
      * Create snippet for given view, e.g. by using the selection
      * @param view view to create snippet for
      */
     void createSnippet (KTextEditor::View *view);
-
-    /**
-     * Show the snippet dialog, used by most simple apps using just
-     * KatePart.
-     * @param view view to show dialog for
-     */
-    void showDialog (KTextEditor::View *view);
 
     void insertSnippetFromActionData();
 
