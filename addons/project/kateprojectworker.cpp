@@ -30,7 +30,7 @@
 #include <QSet>
 #include <QTime>
 
-#ifdef HAVE_GIT2
+#ifdef LIBGIT2_FOUND
 #include <git2.h>
 #include <git2/oid.h>
 #include <git2/repository.h>
@@ -203,7 +203,15 @@ void KateProjectWorker::loadFilesEntry(QStandardItem *parent, const QVariantMap 
          */
         KateProjectItem *fileItem = new KateProjectItem(KateProjectItem::File, fileInfo.fileName());
         fileItem->setData(filePath, Qt::ToolTipRole);
-        item2ParentPath.append(QPair<QStandardItem *, QStandardItem *>(fileItem, directoryParent(dir2Item, dir.relativeFilePath(fileInfo.absolutePath()))));
+
+        // get the directory's relative path to the base directory
+        QString dirRelPath = dir.relativeFilePath(fileInfo.absolutePath());
+        // if the relative path is ".", clean it up
+        if (dirRelPath == QStringLiteral(".")) {
+            dirRelPath = QString();
+        }
+
+        item2ParentPath.append(QPair<QStandardItem *, QStandardItem *>(fileItem, directoryParent(dir2Item, dirRelPath)));
         fileItem->setData(filePath, Qt::UserRole);
         (*file2Item)[filePath] = fileItem;
     }
@@ -242,7 +250,7 @@ QStringList KateProjectWorker::findFiles(const QDir &dir, const QVariantMap& fil
     }
 }
 
-#ifdef HAVE_GIT2
+#ifdef LIBGIT2_FOUND
 namespace {
     struct git_walk_payload {
         QStringList *files;
@@ -312,31 +320,59 @@ namespace {
 
         return files;
     }
+
+    int gitStatusListWalker(const char *path, unsigned int status_flags, void *payload)
+    {
+        struct git_walk_payload *data = static_cast<git_walk_payload *>(payload);
+
+        // if the entry is a new file, add it to the list
+        if (status_flags & GIT_STATUS_INDEX_NEW) {
+            QString name = QString::fromUtf8(path);
+            QString filepath = QDir(data->basedir).filePath(name);
+            data->files->append(filepath);
+        }
+
+        return 0;
+    }
+
+    QStringList gitSearchStatusList(git_repository *repo, const QString &basedir)
+    {
+        QStringList files;
+        struct git_walk_payload payload = {&files, false, basedir};
+
+        git_status_foreach(repo, gitStatusListWalker, (void *)&payload);
+
+        return files;
+    }
 }
 
 QStringList KateProjectWorker::filesFromGit(const QDir &dir, bool recursive)
 {
+    // init libgit2, we require at least 0.22 which has this function!
+    // do this here to have init in this thread done, shutdown afterwards again!
+    git_libgit2_init();
+
     QStringList files;
     git_repository *repo = nullptr;
     git_object *root_tree = nullptr, *tree = nullptr;
-    const char *working_dir;
-    QDir workdir;
-    QString relpath;
 
-    git_libgit2_init();
-
-    if (git_repository_open_ext(&repo, dir.path().toUtf8().data(), 0, NULL)) {
+    // check if the repo can be opened.
+    // git_repository_open_ext() will return 0 if everything is OK;
+    // if not, return an empty files list
+    const QByteArray repoPathUtf8 = dir.path().toUtf8();
+    if (git_repository_open_ext(&repo, repoPathUtf8.constData(), 0, NULL)) {
+        git_libgit2_shutdown();
         return files;
     }
 
+    // get the working directory of the repo
+    // if none was found, return an empty files list
+    const char *working_dir = nullptr;
     if ((working_dir = git_repository_workdir(repo)) == nullptr) {
         git_repository_free(repo);
         git_libgit2_shutdown();
         return files;
     }
-
-    workdir.setPath(QString::fromUtf8(working_dir));
-    relpath = workdir.relativeFilePath(dir.path());
 
     if (git_revparse_single(&root_tree, repo, "HEAD^{tree}")) {
         git_repository_free(repo);
@@ -344,10 +380,14 @@ QStringList KateProjectWorker::filesFromGit(const QDir &dir, bool recursive)
         return files;
     }
 
-    if (relpath.isEmpty()) { // git_object_lookup_bypath is not able to resolv "." as path
+    QDir workdir;
+    workdir.setPath(QString::fromUtf8(working_dir));
+    const QByteArray relpathUtf8 = workdir.relativeFilePath(dir.path()).toUtf8();
+
+    if (relpathUtf8.isEmpty() || relpathUtf8 == ".") { // git_object_lookup_bypath is not able to resolv "." as path
         tree = root_tree;
     } else {
-        if (git_object_lookup_bypath(&tree, root_tree, relpath.toUtf8().data(), GIT_OBJ_TREE)) {
+        if (git_object_lookup_bypath(&tree, root_tree, relpathUtf8.constData(), GIT_OBJ_TREE)) {
             git_object_free(root_tree);
             git_repository_free(repo);
             git_libgit2_shutdown();
@@ -359,9 +399,11 @@ QStringList KateProjectWorker::filesFromGit(const QDir &dir, bool recursive)
 
     files.append(gitSearchTree(tree, path, recursive));
 
-    if (recursive && relpath.isEmpty()) {
+    if (recursive && relpathUtf8.isEmpty()) {
         files.append(gitSearchSubmodules(repo, path));
     }
+
+    files.append(gitSearchStatusList(repo, path));
 
     if (tree != root_tree) {
         git_object_free(tree);

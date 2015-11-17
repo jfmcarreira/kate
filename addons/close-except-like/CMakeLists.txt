@@ -17,19 +17,21 @@ set(KATE_CLOSE_EXCEPT_PLUGIN_UI
 )
 ki18n_wrap_ui(KATE_CLOSE_EXCEPT_PLUGIN_SOURCES ${KATE_CLOSE_EXCEPT_PLUGIN_UI})
 
+# resource for ui file and stuff
+qt5_add_resources(KATE_CLOSE_EXCEPT_PLUGIN_SOURCES plugin.qrc)
+
 add_library(katecloseexceptplugin MODULE ${KATE_CLOSE_EXCEPT_PLUGIN_SOURCES})
+
+# we compile in the .desktop file
+kcoreaddons_desktop_to_json(katecloseexceptplugin katecloseexceptplugin.desktop)
 
 target_link_libraries(katecloseexceptplugin
    KF5::TextEditor
    KF5::Parts
    KF5::I18n
    KF5::IconThemes
-   KF5::Notifications
   )
 
 configure_file(config.h.in config.h)
 
 install(TARGETS katecloseexceptplugin DESTINATION ${PLUGIN_INSTALL_DIR}/ktexteditor)
-
-kcoreaddons_desktop_to_json(katecloseexceptplugin katecloseexceptplugin.desktop)
-install(FILES ui.rc DESTINATION ${KXMLGUI_INSTALL_DIR}//katecloseexceptplugin)

@@ -1,13 +1,12 @@
 # detect additional frameworks
-find_package(KF5 "${KF5_DEP_VERSION}" OPTIONAL_COMPONENTS Wallet Plasma Service ItemModels Notifications ThreadWeaver NewStuff IconThemes GuiAddons)
+find_package(KF5 "${KF5_DEP_VERSION}" OPTIONAL_COMPONENTS Wallet Plasma Service ItemModels ThreadWeaver NewStuff IconThemes GuiAddons)
 
 set_package_properties(KF5Wallet PROPERTIES PURPOSE "Required to build the katesql addon")
 set_package_properties(KF5Plasma PROPERTIES PURPOSE "Required to build the sessionapplet addon")
 set_package_properties(KF5Service PROPERTIES PURPOSE "Required to build the sessionapplet addon")
 set_package_properties(KF5ItemModels PROPERTIES PURPOSE "Required to build the project, konsole addon")
-set_package_properties(KF5Notifications PROPERTIES PURPOSE "Required to build the katebuild, close-except-like addons")
 set_package_properties(KF5ThreadWeaver PROPERTIES PURPOSE "Required to build the project addon")
-set_package_properties(KF5NewStuff PROPERTIES PURPOSE "Required to build the snippets addon")
+set_package_properties(KF5NewStuff PROPERTIES PURPOSE "Required to build the snippets and project addons")
 
 # document switcher
 ecm_optional_add_subdirectory (filetree)
@@ -24,8 +23,10 @@ ecm_optional_add_subdirectory (kate-ctags)
 # backtrace
 ecm_optional_add_subdirectory (backtracebrowser)
 
-# file browser
-ecm_optional_add_subdirectory (filebrowser)
+# file browser, atm guarded until we have a check for KIOWidgets
+if (NOT WIN32)
+    ecm_optional_add_subdirectory (filebrowser)
+endif()
 
 # xml completion
 ecm_optional_add_subdirectory (xmltools)
@@ -33,8 +34,10 @@ ecm_optional_add_subdirectory (xmltools)
 # open header matching to current file
 ecm_optional_add_subdirectory (openheader)
 
-# debugger plugin, needs windows love
-ecm_optional_add_subdirectory (gdbplugin)
+# debugger plugin, needs windows love, guarded until ported to win32
+if (NOT WIN32)
+    ecm_optional_add_subdirectory (gdbplugin)
+endif ()
 
 # list symbols and functions in a file
 ecm_optional_add_subdirectory (symbolviewer)
@@ -43,21 +46,19 @@ ecm_optional_add_subdirectory (symbolviewer)
 ecm_optional_add_subdirectory (replicode)
 
 # pipe text through some external command
-ecm_optional_add_subdirectory( textfilter )
+ecm_optional_add_subdirectory (textfilter)
 
 # Rust complection plugin
-ecm_optional_add_subdirectory(rustcompletion)
+ecm_optional_add_subdirectory (rustcompletion)
 
 # D completion plugin
-ecm_optional_add_subdirectory(lumen)
+ecm_optional_add_subdirectory (lumen)
 
-if(KF5Notifications_FOUND)
-    # close document except this one (or similar)
-    ecm_optional_add_subdirectory (close-except-like)
+# build plugin
+ecm_optional_add_subdirectory (katebuild-plugin)
 
-    # build plugin
-    ecm_optional_add_subdirectory (katebuild-plugin)
-endif()
+# close document except this one (or similar)
+ecm_optional_add_subdirectory (close-except-like)
 
 if(KF5Wallet_FOUND)
     # kate sql
@@ -74,11 +75,11 @@ if(KF5ItemModels_FOUND)
     ecm_optional_add_subdirectory (konsole)
 endif()
 
-if(KF5ItemModels_FOUND AND KF5ThreadWeaver_FOUND)
+if(KF5ItemModels_FOUND AND KF5ThreadWeaver_FOUND AND KF5NewStuff_FOUND)
     # small & smart project manager
     ecm_optional_add_subdirectory (project)
 endif()
 
 if (KF5Plasma_FOUND AND KF5Service_FOUND)
-    ecm_optional_add_subdirectory(sessionapplet)
+    ecm_optional_add_subdirectory (sessionapplet)
 endif()

@@ -2,10 +2,12 @@ project(kateprojectplugin)
 
 find_package(KF5NewStuff ${KF5_DEP_VERSION} REQUIRED) # For KMoreTools
 
-# libgit2 integration
+# libgit2 integration, at least 0.22 with proper git_libgit2_init()
 find_package(LibGit2 "0.22.0")
+
+# set right defines for libgit2 usage
 if(LIBGIT2_FOUND)
-    add_definitions(-DHAVE_GIT2)
+    add_definitions(-DLIBGIT2_FOUND)
     set (PROJECT_OPTIONAL_LIBS LibGit2::LibGit2)
 endif()
 
@@ -30,12 +32,13 @@ set(kateprojectplugin_PART_SRCS
   kateprojectinfoviewcodeanalysis.cpp
   kateprojectinfoviewnotes.cpp
   kateprojectconfigpage.cpp
-  rtags/rtagsclient.cpp
-  rtags/rtagslocation.cpp
 )
 
-add_library(kateprojectplugin MODULE ${kateprojectplugin_PART_SRCS})
+# resource for ui file and stuff
+qt5_add_resources(kateprojectplugin_PART_SRCS plugin.qrc)
 
+add_library(kateprojectplugin MODULE ${kateprojectplugin_PART_SRCS})
+kcoreaddons_desktop_to_json (kateprojectplugin kateprojectplugin.desktop)
 target_link_libraries(kateprojectplugin
     KF5::TextEditor
     KF5::Parts KF5::I18n
@@ -47,11 +50,7 @@ target_link_libraries(kateprojectplugin
 
 ########### install files ###############
 install(TARGETS kateprojectplugin DESTINATION ${PLUGIN_INSTALL_DIR}/ktexteditor )
-
-install( FILES ui.rc DESTINATION  ${KXMLGUI_INSTALL_DIR}/kateproject )
 install( FILES kateproject.example DESTINATION  ${DATA_INSTALL_DIR}/kateproject )
-
-kcoreaddons_desktop_to_json (kateprojectplugin kateprojectplugin.desktop)
 
 ############# unit tests ################
 ecm_optional_add_subdirectory (autotests)
