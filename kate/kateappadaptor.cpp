@@ -108,8 +108,8 @@ bool KateAppAdaptor::activateSession(QString session)
 
 int KateAppAdaptor::desktopNumber()
 {
-  KWindowInfo appInfo(m_app->activeKateMainWindow()->winId(), NET::WMDesktop  );
-  return appInfo.desktop();
+    KWindowInfo appInfo(m_app->activeKateMainWindow()->winId(), NET::WMDesktop);
+    return appInfo.desktop();
 }
 
 QString KateAppAdaptor::activeSession()

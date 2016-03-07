@@ -277,9 +277,9 @@ int main(int argc, char **argv)
         // choose amoung different existing instances
         bool foundRunningService = false;
         if ((!force_new) && (serviceName.isEmpty())) {
-            int desktopnumber;
+            const int desktopnumber = KWindowSystem::currentDesktop();
             int sessionDesktopNumber;
-            for( int s = 0; s < kateServices.count(); s++) {
+            for (int s = 0; s < kateServices.count(); s++) {
 
                 serviceName = kateServices[s];
 
@@ -290,16 +290,15 @@ int main(int argc, char **argv)
                 }
 
                 if (foundRunningService) {
-                    desktopnumber = KWindowSystem::currentDesktop();
                     sessionDesktopNumber = -1;
                     QDBusMessage m = QDBusMessage::createMethodCall(serviceName,
-                            QStringLiteral("/MainApplication"), QStringLiteral("org.kde.Kate.Application"), QStringLiteral("desktopNumber"));
+                                     QStringLiteral("/MainApplication"), QStringLiteral("org.kde.Kate.Application"), QStringLiteral("desktopNumber"));
 
                     QDBusMessage res = QDBusConnection::sessionBus().call(m);
                     QList<QVariant> answer = res.arguments();
-                    if( answer.size() == 1 ) {
-                        sessionDesktopNumber = answer.at( 0 ).toInt();
-                        if( sessionDesktopNumber ==  desktopnumber ) {
+                    if (answer.size() == 1) {
+                        sessionDesktopNumber = answer.at(0).toInt();
+                        if (sessionDesktopNumber ==  desktopnumber) {
                             break;
                         }
                     }
