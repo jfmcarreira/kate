@@ -274,7 +274,7 @@ int main(int argc, char **argv)
             }
         }
 
-        // choose amoung different existing instances
+        // prefer the Kate instance running on the current virtual desktop
         bool foundRunningService = false;
         if ((!force_new) && (serviceName.isEmpty())) {
             const int desktopnumber = KWindowSystem::currentDesktop();
@@ -283,23 +283,25 @@ int main(int argc, char **argv)
 
                 serviceName = kateServices[s];
 
-                foundRunningService = false;
                 if (!serviceName.isEmpty()) {
                     QDBusReply<bool> there = sessionBusInterface->isServiceRegistered(serviceName);
-                    foundRunningService = there.isValid() && there.value();
-                }
 
-                if (foundRunningService) {
-                    sessionDesktopNumber = -1;
-                    QDBusMessage m = QDBusMessage::createMethodCall(serviceName,
-                                     QStringLiteral("/MainApplication"), QStringLiteral("org.kde.Kate.Application"), QStringLiteral("desktopNumber"));
+                    if (there.isValid() && there.value()) {
+                        sessionDesktopNumber = -1;
 
-                    QDBusMessage res = QDBusConnection::sessionBus().call(m);
-                    QList<QVariant> answer = res.arguments();
-                    if (answer.size() == 1) {
-                        sessionDesktopNumber = answer.at(0).toInt();
-                        if (sessionDesktopNumber ==  desktopnumber) {
-                            break;
+                        // query instance current desktop
+                        QDBusMessage m = QDBusMessage::createMethodCall(serviceName,
+                                         QStringLiteral("/MainApplication"), QStringLiteral("org.kde.Kate.Application"), QStringLiteral("desktopNumber"));
+
+                        QDBusMessage res = QDBusConnection::sessionBus().call(m);
+                        QList<QVariant> answer = res.arguments();
+                        if (answer.size() == 1) {
+                            sessionDesktopNumber = answer.at(0).toInt();
+                            if (sessionDesktopNumber ==  desktopnumber) {
+                                // stop searching. a candidate instance in the current desktop has been found
+                                foundRunningService = true;
+                                break;
+                            }
                         }
                     }
                 }
