@@ -416,36 +416,6 @@ void KatePluginSearchView::setCurrentFolder()
     }
 }
 
-
-QString KatePluginSearchView::currentWord(const KTextEditor::Document& document, const KTextEditor::Cursor& cursor ) const
-{
-    QString textLine = document.line(cursor.line());
-
-    int len = textLine.length();
-
-    if (cursor.column() > len) {       // Probably because of non-wrapping cursor mode.
-        return QString();
-    }
-
-    int start = cursor.column();
-    for(int currPos = cursor.column()-1; currPos >= 0; currPos--) {
-        if (textLine.at(currPos).isLetterOrNumber() || (textLine[currPos]==QLatin1Char('_')) || (textLine[currPos]==QLatin1Char('~'))) {
-            start = currPos;
-        }
-        else {
-            break;
-        }
-    }
-
-    int end = cursor.column();
-    while (end < len && (textLine.at(end).isLetterOrNumber()
-                     || (textLine[end]==QLatin1Char('_')) || (textLine[end]==QLatin1Char('~')))) {
-        end++;
-    }
-
-    return textLine.mid(start, (end - start));
-}
-
 void KatePluginSearchView::openSearchView()
 {
     if (!m_mainWindow) {
@@ -472,7 +442,7 @@ void KatePluginSearchView::openSearchView()
             }
         }
         if (selection.isEmpty()) {
-            selection = currentWord(*editView->document(), editView->cursorPosition());
+            selection = editView->document()->wordAt(editView->cursorPosition());
         }
 
         if (!selection.isEmpty() && !selection.contains(QLatin1Char('\n'))) {
@@ -707,8 +677,9 @@ void KatePluginSearchView::addMatchMark(KTextEditor::Document* doc, int line, in
 {
     if (!doc) return;
 
+    KTextEditor::View* activeView = m_mainWindow->activeView();
     KTextEditor::MovingInterface* miface = qobject_cast<KTextEditor::MovingInterface*>(doc);
-    KTextEditor::ConfigInterface* ciface = qobject_cast<KTextEditor::ConfigInterface*>(m_mainWindow->activeView());
+    KTextEditor::ConfigInterface* ciface = qobject_cast<KTextEditor::ConfigInterface*>(activeView);
     KTextEditor::Attribute::Ptr attr(new KTextEditor::Attribute());
 
     bool replace = ((sender() == &m_replacer) || (sender() == 0) || (sender() == m_ui.replaceButton));
@@ -716,15 +687,23 @@ void KatePluginSearchView::addMatchMark(KTextEditor::Document* doc, int line, in
         QColor replaceColor(Qt::green);
         if (ciface) replaceColor = ciface->configValue(QStringLiteral("replace-highlight-color")).value<QColor>();
         attr->setBackground(replaceColor);
+
+        if (activeView) {
+            attr->setForeground(activeView->defaultStyleAttribute(KTextEditor::dsNormal)->foreground().color());
+        }
     }
     else {
         QColor searchColor(Qt::yellow);
         if (ciface) searchColor = ciface->configValue(QStringLiteral("search-highlight-color")).value<QColor>();
         attr->setBackground(searchColor);
+
+        if (activeView) {
+            attr->setForeground(activeView->defaultStyleAttribute(KTextEditor::dsNormal)->foreground().color());
+        }
     }
     // calculate end line in case of multi-line match
     int endLine = line;
-    int endColumn = column+matchLen;
+    int endColumn = column + matchLen;
     while ((endLine < doc->lines()) &&  (endColumn > doc->line(endLine).size())) {
         endColumn -= doc->line(endLine).size();
         endColumn--; // remove one for '\n'
