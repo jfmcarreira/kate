@@ -399,7 +399,7 @@ QStringList KateProjectWorker::filesFromGit(const QDir &dir, bool recursive)
 
     files.append(gitSearchTree(tree, path, recursive));
 
-    if (recursive && relpathUtf8.isEmpty()) {
+    if (recursive && (relpathUtf8.isEmpty() || relpathUtf8 == ".")) {
         files.append(gitSearchSubmodules(repo, path));
     }
 
@@ -628,7 +628,8 @@ void KateProjectWorker::loadIndex(const QStringList &files)
      * create new index, this will do the loading in the constructor
      * wrap it into shared pointer for transfer to main thread
      */
-    KateProjectSharedProjectIndex index(new KateProjectIndex(files));
+    const QString keyCtags = QStringLiteral("ctags");
+    KateProjectSharedProjectIndex index(new KateProjectIndex(files, m_projectMap[keyCtags].toMap()));
 
     emit loadIndexDone(index);
 }
