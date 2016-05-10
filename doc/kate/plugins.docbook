@@ -9,10 +9,7 @@
 
 <title>Working with Plugins</title>
 
-<para>&kate; offers several types of plugin.  There are plugins for the &kate; editor
-component, which are available to any application using the editor component, 
-such as KDevelop, Quanta, Kile, &kwrite; and many others.  There are also plugins
-only available in the &kate; editor itself.  There are two types of these plugins:
+<para>&kate; offers several plugins. There are two types of these plugins:
 some are written in native C++, while others are written in the Python programming
 language.  There are subtle differences in these, described below.</para>
 
@@ -20,20 +17,6 @@ language.  There are subtle differences in these, described below.</para>
 linkend="configuring-kate-configdialog">configuration dialog</link>, which also
 provides access to additional configuration options for plugins that require
 it.</para>
-
-<para>There are many plugins for various purposes available
-and you can search the web for more. A few plugins are shipped with the
-editor component, for inserting automatic braces, inserting files,
-and exporting text as &HTML;.</para>
-
-<sect1 id="editor-component-plugins">
-<title>Editor Component Extensions</title>
-
-<para>For information about available plugins, see the 
-<ulink url="help:/katepart/editor-component-plugins.html">Editor Component
-Extensions section of the &katepart; Handbook</ulink>.</para>
-
-</sect1>
 
 <sect1 id="kate-application-plugins">
 <title>&kate; Application Plugins</title>
@@ -73,6 +56,9 @@ The available application plugins are:
   File system browser tool view</para>
 </listitem>
 <listitem>
+<para>Documents - Displays the open files in a file tree</para>
+</listitem>
+<listitem>
 <para><link linkend="kate-application-plugin-gdb">&gdb;</link> - Provides a
 simple &gdb; frontend</para>
 </listitem>
@@ -99,7 +85,7 @@ simple &gdb; frontend</para>
 Search or replace patterns in opened documents or in files on disk</para>
 </listitem>
 <listitem>
-<para>Snippets tool view - Tool view embedding the snippets management</para>
+<para><link linkend="kate-application-plugin-snippets">Snippets tool view</link> - Tool view embedding the snippets management</para>
 </listitem>
 <listitem>
 <para><link linkend="kate-application-plugin-sql">SQL Plugin</link> - Execute
@@ -109,7 +95,7 @@ query on SQL databases</para>
 <para>Symbol Viewer - Extract and show reference symbols from source</para>
 </listitem>
 <listitem>
-<para>Terminal tool view - Tool view embedding a terminal widget</para>
+<para><link linkend="kate-application-plugin-konsole">Terminal tool view</link> - Tool view embedding a terminal widget</para>
 </listitem>
 <listitem>
 <para>Text Filter - Easy text filtering</para>
@@ -118,566 +104,188 @@ query on SQL databases</para>
 <para><link linkend="kate-application-plugin-xmltools">&XML;Completetion</link> - Lists &XML; elements,
 attributes, attribute values and entities allowed by DTD</para>
 </listitem>
-
-<!-- not in 4.10
-<listitem>
-<para>Text Snippets - Configurable Text Snippets</para>
-</listitem-->
-<!--listitem>
-<para>Kate Python Browser Plugin - A Python browser plugin for Kate</para>
-</listitem-->
-<!--<listitem>
-<para><link linkend="kate-application-plugin-exttools">External Tools</link></para>
-</listitem>
-<listitem>
-<para><link linkend="kate-application-plugin-snippets">Kate Snippets</link> - Snippets plugin with code completion support</para>
-</listitem>
-<para>Tabify - Adds a tab bar to Kate's main window</para>
-http://kate-editor.org/2011/04/25/kates-tab-bar-plugins/
-</listitem>
--->
 </itemizedlist>
 </sect1>
 
-<!-- from doc/kate-addons/xmlcheck.docbook -->
-<sect1 id="kate-application-plugin-xmltools">
+<sect1 id="kate-application-plugin-build">
+<!--http://kate-editor.org/2011/06/21/kate-plugin-updates-part-1/ -->
 <sect1info>
-<authorgroup><author>
-&Daniel.Naber; &Daniel.Naber.mail;
-</author></authorgroup>
+<authorgroup>
+<author><firstname>Salma</firstname> <surname>Sultana</surname></author>
+<author>&TC.Hollingsworth; &TC.Hollingsworth.mail;</author>
+</authorgroup>
 </sect1info>
-<title>&XML; Completion</title>
+<title>Build Plugin</title>
 
-<para>This plugin gives hints about what is allowed at a certain position in
-an &XML; file, according to the file's DTD. It will list possible
-elements, attributes, attribute values or entities, depending on the
-cursor position (&eg; all entities are listed if the character on the left
-of the cursor is <quote>&amp;</quote>). It's also possible to close the nearest
-open tag on the left.</para>
-
-<para>The <acronym>DTD</acronym> must exist in &XML; format, as produced by the Perl program
-<command>dtdparse</command>. We will call a DTD in this format <quote>meta DTD</quote>.
-Some meta DTDs are supplied. They are installed in
-<filename class="directory">$KDEDIR/share/apps/katexmltools/</filename>,
-which is also the default folder when you choose
-<guimenuitem>Assign Meta DTD...</guimenuitem>.
-To produce your own meta DTDs, get <command>dtdparse</command> from
-<ulink url="http://dtdparse.sourceforge.net">http://dtdparse.sourceforge.net</ulink>.</para>
-
-<sect2 id="xmltools-how-to-use">
-<title>How to Use</title>
-
-<para>Start &kate; and open the configuration dialog under <menuchoice><guimenu>Settings</guimenu>
-<guimenuitem>Configure &kate;...</guimenuitem></menuchoice>.
-Then select <guilabel>&XML; Completion</guilabel> which will appear
-in the <guilabel>Application</guilabel>/<guilabel>Plugins</guilabel> section and close the dialog. After
-that, select <menuchoice><guimenu>&XML;</guimenu><guimenuitem>Assign Meta DTD...</guimenuitem></menuchoice>.
-If your document contains no <quote>DOCTYPE</quote> or the doctype is unknown, you will have to
-select a meta DTD from the file system. Otherwise the meta DTD that
-matches the current document's DOCTYPE will be loaded automatically.</para>
-
-<para>You can now use the plugin while typing your text:</para>
-
-<variablelist>
-
-<varlistentry>
-<term><keycap>&lt;</keycap> (less than key)</term>
-<listitem><para>This will trigger a list of possible elements unless the
-cursor is inside a tag already. Note that you currently cannot use
-this to insert the top level element (&eg; <quote>&lt;html&gt;</quote>).</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><keycap>&lt;</keycap><keycap>/</keycap>(less than key + slash)</term>
-<listitem><para>Entering these characters will offer to close the current element
-(nearest open one to the left of the cursor). Press &Enter; to accept the suggestion.
-Unlike the <guimenuitem>Close Element</guimenuitem> menu item, this works only with
-a DTD assigned.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><keycap>"</keycap> (quote key)</term>
-<listitem><para>The quote key will trigger a list of possible attribute
-values (if there are any) if you are inside a tag.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><keycap>&nbsp;</keycap> (space key)</term>
-<listitem><para>This key will trigger a list of possible attributes for the
-current element if you are inside a tag.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term><keycap>&amp;</keycap> (ampersand key)</term>
-<listitem><para>This key will trigger a list of named entities.</para></listitem>
-</varlistentry>
-</variablelist>
-
-</sect2>
-
-<sect2 id="xmltools-features-and-limitations">
-<title>Features and Limitations</title>
-
-<para>You can test all functions and limitations by loading
-<filename>$KDEDIR/share/apps/katexmltools/testcases.xml</filename>
-into &kate; and following the instructions.</para>
-
-</sect2>
-
-
-<sect2 id="xmltools-menu">
-<title>Menu Structure</title>
-
-<variablelist>
-<varlistentry>
-<term>
-<menuchoice>
-<shortcut>
-<keycombo action="simul">&Ctrl;<keycap>Return</keycap></keycombo>
-</shortcut>
-<guimenu>&XML;</guimenu>
-<guimenuitem>Insert Element...</guimenuitem>
-</menuchoice>
-</term>
-<listitem><para>This will open a dialog that lets you insert an &XML; element.
-The &lt;, &gt; characters and the closing tag will be inserted automatically.
-If you have selected text when this menu item is selected, the selected
-text will be surrounded by the opening and the closing tag.
-The dialog also offers completion of all elements that may be inserted
-at the current cursor position if you have assigned a meta DTD by
-using <guimenuitem>Assign Meta DTD...</guimenuitem>.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term>
-<menuchoice>
-<shortcut>
-<keycombo action="simul">&Ctrl;<keycap>&lt;</keycap></keycombo>
-</shortcut>
-<guimenu>&XML;</guimenu>
-<guimenuitem>Close Element</guimenuitem>
-</menuchoice>
-</term>
-<listitem><para>This will search your text for a tag that is not yet closed
-and will close it by inserting the corresponding closing tag.
-The search starts at the cursor position and goes left. If
-it cannot find an open tag nothing will happen.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term>
-<menuchoice>
-<guimenu>&XML;</guimenu>
-<guimenuitem>Assign Meta DTD...</guimenuitem>
-</menuchoice>
-</term>
-<listitem><para>This will tell the plugin which meta DTD to use for the
-current document. Note that this assignment will not be saved.
-You will have to repeat it when you start &kate; the next time.</para></listitem>
-</varlistentry>
-</variablelist>
-
-</sect2>
-
-<sect2 id="xmltools-thanks-and-acknowledgements">
-<title>Thanks and Acknowledgments</title>
-<para>
-&kate; Plugin <quote>&XML; Completion</quote> copyright 2001,2002 &Daniel.Naber;
-&Daniel.Naber.mail;.
-</para>
-<para>KDE SC 4 version copyright 2010 Tomáš Trnka</para>
-<para>Documentation copyright 2001,2002 &Daniel.Naber;</para>
-</sect2>
-
-</sect1>
-<!--FIXME this belongs to Extensions, it is an editor plugin-->
-<sect1 id="kate-editor-plugin-exporter">
-<!--<sect1info>
-<authorgroup><author>
-&TC.Hollingsworth; &TC.Hollingsworth.mail;
-</author></authorgroup>
-</sect1info>-->
-<title>Exporter</title>
-
-<sect2 id="exporter-menu">
-<title>Menu Structure</title>
-
-<variablelist>
-<varlistentry>
-<term>
-<menuchoice>
-<guimenu>File</guimenu>
-<guimenuitem>Export as &HTML;...</guimenuitem>
-</menuchoice>
-</term>
-<listitem>
-<para>
-Export your file in &HTML; format so your document can be viewed as a web page.
-</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>
-<menuchoice>
-<guimenu>Edit</guimenu>
-<guimenuitem>Copy as &HTML;...</guimenuitem>
-</menuchoice>
-</term>
-<listitem>
-<para>Copies selected text with the syntax highlight as &HTML; text.</para>
-</listitem>
-</varlistentry>
-
-</variablelist>
-</sect2>
-</sect1>
-
-<sect1 id="kate-application-plugin-searchinfiles">
-<sect1info>
-<authorgroup><author>
-&TC.Hollingsworth; &TC.Hollingsworth.mail;
-</author></authorgroup>
-</sect1info>
-<title>Search &amp; Replace</title>
-
-<sect2 id="searchinfiles-intro">
+<sect2 id="build-intro">
 <title>Introduction</title>
-<para>&kappname;'s Search &amp; Replace plugin allows you to search for text or
-<ulink url="help:/katepart/regular-expressions.html">regular expressions</ulink>
-in many different files at once.  You can search all open files, all the files
-in one directory and optionally its subdirectories, or all files in the current
-project.  You can even filter by filename, for instance searching only files
-that end with a particular file extension.</para>
+
+<para>The Build plugin allows you to run actions like build, clean and compile
+on a project.</para>
 
 </sect2>
 
-<sect2 id="searchinfiles-ui">
-<title>Interface</title>
+<sect2 id="build-using">
+<title>Using the Build Plugin</title>
 
-<sect3 id="searchinfiles-ui-query">
-<title>Search Query</title>
+<para>The Build plugin adds a <guilabel>Build Output</guilabel> tool view at the
+bottom and a <guimenu>Build</guimenu> menu on the menubar. The tool view can be used to configure
+build target settings, while the menu can be used to perform build, clean and
+compile actions.</para>
 
-<para>The following options are always displayed at the top of the Search in
-Files tool view:</para>
 
-<variablelist>
+<para>The <guilabel>Build Output</guilabel> tool view has three tabs:</para>
 
-<varlistentry>
-<term><guiicon>New Tab</guiicon></term>
-<listitem><para>
-You can have as many searches as you want open at the same time.  Simply click
-the <guibutton>New Tab</guibutton> button at the top-left corner of the Search
-tool view and a new results tab will open permitting you to perform another
-search.
-</para></listitem>
-</varlistentry>
+<itemizedlist>
+<listitem><para><guilabel>Target Settings</guilabel></para></listitem>
+<listitem><para><guilabel>Output</guilabel></para></listitem>
+<listitem><para><guilabel>Errors &amp; Warnings</guilabel></para></listitem>
+</itemizedlist>
 
-<varlistentry>
-<term><guiicon>Toggle Results</guiicon></term>
-<listitem><para>
-The down arrow in the top right-corner of the Search in Files tool view will
-toggle the bottom half of the tool view between displaying additional options
-for the Search in Folder mode and the results of your search.
-</para></listitem>
-</varlistentry>
+<sect3 id="build-using-target-settings">
+<title>Target Settings tab</title>
 
-<varlistentry>
-<term><guilabel>Find</guilabel></term>
-<listitem><para>
-This is where you type in what you want to find.  You may enter standard text, 
-or a regular expression if enabled.
-</para></listitem>
-</varlistentry>
+<para>The target settings tab can be used to configure various build targets.</para>
 
-<varlistentry>
-<term><guilabel>Replace</guilabel> (text box)</term>
-<listitem><para>
-Replacement text that will be added to file(s) in place of the text in the
-<guilabel>Find</guilabel> text box.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Search</guibutton></term>
-<listitem><para>
-When you've finished configuring everything, just press the
-<guibutton>Search</guibutton> button to perform your search.  You may also press
-&Enter; in the <guilabel>Find</guilabel> text box to do the same.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Replace</guibutton></term>
-<listitem><para>
-When you've finished configuring everything, just press the
-<guibutton>Replace</guibutton> button to replace the text entered in the
-<guilabel>Find</guilabel> text box with that of the <guilabel>Replace</guilabel>
-text box.  You may also press &Enter; in the <guilabel>Replace</guilabel> text 
-box to do the same.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Next</guibutton></term>
-<listitem><para>
-Go to the next match of your search query, switching files if necessary.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Replace checked</guibutton></term>
-<listitem><para>
-The same as <guibutton>Replace</guibutton>, but will only perform replacements
-in files that are checked in the pane below.
-</para></listitem>
-</varlistentry>
-
-</variablelist>
-</sect3>
-
-<sect3 id="searchinfiles-ui-folder">
-<title>Search in Folder Options</title>
-
-<para>These options are displayed below the aforementioned query options. If search
-results are being displayed instead, press the <guiicon>Toggle Results</guiicon>
-button to display them.</para>
+<para>Each target contains four configuration options:</para>
 
 <variablelist>
-
 <varlistentry>
-<term><guilabel>Match case</guilabel></term>
-<listitem><para>
-Restricts search results to only those that have the exact same combination
-of upper and lower case letters as your search query.
-</para></listitem>
+<term><guilabel>Working Directory</guilabel></term>
+<listitem><para>You can set the path to the project here. Leave this empty to
+use the directory the current document is located in.</para></listitem>
 </varlistentry>
 
 <varlistentry>
-<term><guilabel>Regular expressions</guilabel></term>
-<listitem><para>
-Permits you to use <ulink url="help:/katepart/regular-expressions.html">regular
-expressions</ulink> instead of simple text as your search query.
-</para></listitem>
+<term><guilabel>Build</guilabel></term>
+<listitem><para>This option lets you define the build command. It is set to
+<command>make</command> by default.</para></listitem>
 </varlistentry>
 
 <varlistentry>
-<term><guilabel>Expand results</guilabel></term>
-<listitem><para>
-Display all the results found in each file, instead of just a list of files
-that contain the search query.
-</para></listitem>
+<term><guilabel>Clean</guilabel></term>
+<listitem><para>The option lets you define the clean command. It is set to
+<command>make clean</command> by default.</para></listitem>
 </varlistentry>
 
 <varlistentry>
-<term><guilabel>Search</guilabel></term>
-<listitem><para>
-This has three options.  Select <guilabel>in Open files</guilabel> to search all
-files currently open in &kappname;.  Select <guilabel>in Folder</guilabel> to
-search inside a folder and optionally its subfolders.  Select <guilabel>in
-Project</guilabel> to search all the files listed in the currently open project.
-</para></listitem>
+<term><guilabel>Quick Compile</guilabel></term>
+<listitem><para>This option lets you define the quick compile command. It is set
+to <command>gcc -Wall -g %f</command> by default.</para></listitem>
 </varlistentry>
-
-<varlistentry>
-<term><guilabel>Folder</guilabel></term>
-<listitem><para>
-You may enter the path of the folder you wish to search.  For instance, you might
-enter <userinput>~/development/kde/kate/</userinput> if you wished to search the
-&kate; source code.  This option is only available when using 
-<guilabel>in Folder</guilabel> mode.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guiicon>Open file dialog</guiicon></term>
-<listitem><para>
-Press this button to locate the folder in your desktop's folder browser. This 
-button only works when using <guilabel>in Folder</guilabel> mode.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guiicon>Up</guiicon></term>
-<listitem><para>
-Press this button to change <guilabel>Folder</guilabel> to the parent of the
-currently selected folder. This button only works when using 
-<guilabel>in Folder</guilabel> mode.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guiicon>Restore Current Folder</guiicon></term>
-<listitem><para>
-This button will set the <guilabel>Folder</guilabel> entry to the folder in which
-the currently open document is located. This  button only works when using 
-<guilabel>in Folder</guilabel> mode.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Filter</guilabel></term>
-<listitem><para>
-This permits you to only search filenames that match a particular pattern.  For
-instance, to only search files written in C++, change it to
-<userinput>*.cpp</userinput>.  To search only files beginning with
-<literal>kate</literal>, change it to <userinput>kate*</userinput>.  You can
-enter multiple filters separated with a comma (<userinput>,</userinput>).  This
-option is not available when using <guilabel>in Open files</guilabel> mode.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Exclude</guilabel></term>
-<listitem><para>
-The opposite of <guilabel>Filter</guilabel>, this prevents &kappname; from
-searching files that match the specified patterns.  As with 
-<guilabel>Filter</guilabel>, you can enter multiple patterns separated with a 
-comma (<userinput>,</userinput>). This option is not available when using
-<guilabel>in Open files</guilabel> mode.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Recursive</guilabel></term>
-<listitem><para>
-If this option is enabled, &kappname; will also search in all subfolders of the
-selected folder. This option is only available when using 
-<guilabel>in Folder</guilabel> mode.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Include hidden</guilabel></term>
-<listitem><para>
-If this option is enabled, &kappname; will also search in files or folders that
-are typically hidden by your &OS;. This option is only available when using 
-<guilabel>in Folder</guilabel> mode.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Follow symbolic links</guilabel></term>
-<listitem><para>
-The Search in Files plugin typically doesn't follow
-<ulink url="http://en.wikipedia.org/wiki/Symbolic_link">symbolic links</ulink>.
-When this option is enabled, the plugin will follow them instead and search inside
-the files or folders they reference. This option is only available when using 
-<guilabel>in Folder</guilabel> mode.
-</para>
-<warning><para>It's possible for symbolic links to reference a folder that is the
-parent of the folder currently being searched, or other folders that contain
-symbolic links to their parent.  If there is such a link in the folder being
-searched and this option is enabled, &kappname; will repeatedly follow the link
-and search the folder, and the search will never complete.</para></warning>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Include binary files</guilabel></term>
-<listitem><para>
-If enabled, &kappname; will also search in files that do not appear to be text
-files.
-</para></listitem>
-</varlistentry>
-
 </variablelist>
+
+<para>One can create a new target by using the <guibutton>New</guibutton> button.
+The <guibutton>Copy</guibutton> button can be used to make a copy of an existing
+target. To delete a target, use the <guibutton>Delete</guibutton> button.</para>
+
 </sect3>
 
-<sect3 id="searchinfiles-ui-results">
-<title>Search Results</title>
+<sect3 id="build-using-output">
+<title>Output tab</title>
 
-<para>The results of your search are displayed below the query options.  If
-options for Search in Folder mode are displayed, simply press the
-<guiicon>Toggle Results</guiicon> button to display them.  They will also
-automatically be displayed as soon as a search is performed.</para>
+<para>The <guilabel>Output</guilabel> tab shows the console output generated by
+the last command.</para>
 
-<para>The search results display a list of files that contains text that matches
-your search query, followed by the number of matches found in that file.</para>
+</sect3>
 
-<para>To see a list of matches in that file, simply click the expansion arrow
-to the left of the file name.  (If you selected the <guilabel>Expand 
-results</guilabel> option, this will already be done for you.)  The line number
-each match is found on will be displayed, followed by the contents of that line,
-with your search query indicated in bold text.</para>
+<sect3 id="buiid-using-errors">
+<title>Errors &amp; Warnings</title>
 
-<para>To open the file your result was found in, simply double-click it.  &kappname;
-will open the file if needed.  You can also move the cursor to the location of
-a particular match by double-clicking on its listing instead of the file name.
-</para>
+<para>The <guilabel>Errors &amp; Warnings</guilabel> tab lists the errors and
+warnings generated by the last command.</para>
+
+<para>Each line contains a message and the file name and line number if available.
+Clicking on the error or warning takes you to the appropriate file and places
+the cursor on the corresponding line number.</para>
+
+<para>There are <guibutton>Errors</guibutton>, <guibutton>Warnings</guibutton>,
+and <guibutton>Others</guibutton> buttons at the top that allow you to show
+or hide those categories of output.</para>
+
+<!--FIXME: These shortcuts now seem to be used by the Project plugin in 4.11.
+            https://bugs.kde.org/show_bug.cgi?id=328170 -->
+<para>To navigate to the previous error, press
+<keycombo action="simul">&Ctrl;&Alt;<keysym>Left</keysym></keycombo>.
+To navigate to the next error, press
+<keycombo action="simul">&Ctrl;&Alt;<keysym>Right</keysym></keycombo>.</para>
 
 </sect3>
 </sect2>
 
-<sect2 id="searchinfiles-menu">
+<sect2 id="build-menu">
 <title>Menu Structure</title>
 
-<variablelist>
-
+<variablelist id="build-build">
 <varlistentry>
-<term>
-<menuchoice>
-<guimenu>Edit</guimenu>
-<guimenuitem>Search in Files</guimenuitem>
-</menuchoice>
-</term>
-<listitem>
-<para>Launches the Search and Replace tool view.</para>
-</listitem>
+<term><menuchoice>
+<guimenu>Build</guimenu><guimenuitem>Build</guimenuitem>
+</menuchoice></term>
+<listitem><para>Runs the <guilabel>Build</guilabel> command for the currently
+selected target.</para></listitem>
+</varlistentry>
+
+<varlistentry id="build-clean">
+<term><menuchoice>
+<guimenu>Build</guimenu><guimenuitem>Clean</guimenuitem>
+</menuchoice></term>
+<listitem><para>Runs the <guilabel>Clean</guilabel> command for the currently
+selected target.</para></listitem>
+</varlistentry>
+
+<varlistentry id="build-compile">
+<term><menuchoice>
+<guimenu>Build</guimenu><guimenuitem>Quick Compile</guimenuitem>
+</menuchoice></term>
+<listitem><para>Runs the <guilabel>Quick Compile</guilabel> command for the
+currently selected target.</para></listitem>
+</varlistentry>
+
+<varlistentry id="build-previous-error">
+<term><menuchoice>
+<shortcut><keycombo action="simul">&Ctrl;&Alt;<keysym>Left</keysym></keycombo></shortcut>
+<guimenu>Build</guimenu><guimenuitem>Previous Error</guimenuitem>
+</menuchoice></term>
+<listitem><para>Moves the cursor to the location of the previous error in the
+document.</para></listitem>
+</varlistentry>
+
+<varlistentry id="build-next-error">
+<term><menuchoice>
+<shortcut><keycombo action="simul">&Ctrl;&Alt;<keysym>Right</keysym></keycombo></shortcut>
+<guimenu>Build</guimenu><guimenuitem>Next Error</guimenuitem>
+</menuchoice></term>
+<listitem><para>Moves the cursor to the location of the next error in the
+document.</para></listitem>
 </varlistentry>
 
 <varlistentry>
-<term>
-<menuchoice>
-<guimenu>Edit</guimenu>
-<guimenuitem>Go to Next Match</guimenuitem>
-</menuchoice>
-</term>
-<listitem>
-<para>Go to the next match in a search performed by the Search and Replace
-plugin.</para>
-</listitem>
+<term><menuchoice id="build-targets">
+<guimenu>Build</guimenu><guisubmenu>Targets</guisubmenu>
+</menuchoice></term>
+<listitem><para>Select from a list of targets configured by the user.</para></listitem>
 </varlistentry>
 
 <varlistentry>
-<term>
-<menuchoice>
-<guimenu>Edit</guimenu>
-<guimenuitem>Go to Previous Match</guimenuitem>
-</menuchoice>
-</term>
-<listitem>
-<para>Go to the previous match in a search performed by the Search and Replace
-plugin.</para>
-</listitem>
-</varlistentry>
-
-<varlistentry>
-<term>
-<menuchoice>
-<guimenu>View</guimenu><guisubmenu>Tool Views</guisubmenu>
-<guimenuitem>Show Search and Replace</guimenuitem>
-</menuchoice>
-</term>
-<listitem>
-<para>Toggle the display of &kappname;'s <guilabel>Search and Replace</guilabel> tool.
-</para>
-</listitem>
+<term><menuchoice id="build-next-target">
+<guimenu>Build</guimenu><guimenuitem>Next Target</guimenuitem>
+</menuchoice></term>
+<listitem><para>Switch to the next target configured by the user.</para></listitem>
 </varlistentry>
 
 </variablelist>
+</sect2>
 
+<sect2 id="build-ack">
+<title>Thanks and Acknowledgments</title>
+<para>The &kate; Build Plugin was written by Kåre Särs.</para>
+<para>Special thanks to Google Code-In 2011 participant Salma Sultana for
+writing much of this section.</para>
 </sect2>
 </sect1>
 
 <sect1 id="kate-application-plugin-fsbrowser">
-<!--<sect1info>
-<authorgroup><author>
-&TC.Hollingsworth; &TC.Hollingsworth.mail;
-</author></authorgroup>
-</sect1info>-->
+
 <title>Filesystem Browser</title>
 
 <para>The Filesystem Browser is a folder viewer, allowing you to open
@@ -687,14 +295,11 @@ files from a displayed folder in the current frame.</para>
 <title>Menu Structure</title>
 <variablelist>
 
-<varlistentry>
-<term>
-<anchor id="view-toolviews-show-fileselector"/>
-<menuchoice>
+<varlistentry id="view-toolviews-show-filebrowser">
+<term><menuchoice>
 <guimenu>View</guimenu><guisubmenu>Tool Views</guisubmenu>
 <guimenuitem>Show Filesystem Browser</guimenuitem>
-</menuchoice>
-</term>
+</menuchoice></term>
 <listitem>
 <para>Toggle the display of &kate;'s Filesystem Browser.</para>
 </listitem>
@@ -842,794 +447,6 @@ list, and order them using the arrow buttons at the side of the list.</para>
 
 </variablelist>
 </sect2>
-</sect1>
-
-<!--some material from mdi.docbook needs to be migrated here too-->
-<!--<sect1 id="kate-application-plugin-exttools">
-<sect1info>
-<authorgroup><author>
-&TC.Hollingsworth; &TC.Hollingsworth.mail;
-</author></authorgroup>
-</sect1info>
-<title>External Tools</title>
-
-<para>In the <guimenu>Tools</guimenu> menu you will find a submenu labeled
-<guisubmenu>External Tools</guisubmenu>, if you have enabled them in &kate; settings.
-These tools invoke external applications with data related to the current document,
-for example its URL, directory, text or selection.</para>
-
-<para>External tools are user defined, you can add, edit or remove tools using
-the <link linkend="exttools-config">External Tools</link> configuration panel.
-</para>
-
-<sect2 id="exttools-menu">
-<title>Menu Structure</title>
-<variablelist>
-
-<varlistentry>
-<term><menuchoice><guimenu>Tools</guimenu><guisubmenu>External
-Tools</guisubmenu></menuchoice></term>
-<listitem><para>This submenu contains all the external tools you have
-configured.</para></listitem>
-</varlistentry>
-
-</variablelist>
-</sect2>
-
-<sect2 id="exttools-config">
-<title>Configuration</title>
-
-<para>External tools are configured on the <guilabel>External Tools</guilabel> page
-of <link linkend="configuring-kate-configdialog">&kate;'s configuration</link>. These tools invoke external
-applications with data related to the current document, for example its URL,
-directory, text or selection. This page allows you to manage the menu and edit,
-remove or add new tools.</para>
-
-<para>Each external tool is a shell command which contains macros representing
-the document data. When activated, the macros are substituted with data from the
-active document.</para>
-
-<variablelist>
-<title>Available Commands</title>
-
-<varlistentry>
-<term><guibutton>New</guibutton></term>
-<listitem><para>Add a new external tool to the list.  This will launch the property
-sheet described below where you can configure an external tool.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Edit</guibutton></term>
-<listitem><para>Edit the currently selected external tool, using the property
-sheet described below.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Insert Separator</guibutton></term>
-<listitem><para>Adds a separator line that appears in the menu below the currently
-selected item.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Up Arrow</guibutton></term>
-<listitem><para>Moves the currently selected item above the previous
-one.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Down Arrow</guibutton></term>
-<listitem><para>Moves the currently selected item below the subsequent
-one.</para></listitem>
-</varlistentry>
-
-</variablelist>
-
-<variablelist>
-<title>External Tools Properties</title>
-<varlistentry>
-<term><guilabel>Label</guilabel></term>
-<listitem><para>A friendly label that will appear in the <guisubmenu>External Tools</guisubmenu> menu.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Icon</guibutton></term>
-<listitem><para>Allows you to select an icon that appears next to the label in the
-<guisubmenu>External Tools</guisubmenu> menu.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Script</guilabel></term>
-<listitem><para>The script to execute when the tool is activated. Before passing
-the script to the shell, the following macros are substituted:
-
-<variablelist>
-<varlistentry>
-<term><userinput>%URL</userinput></term>
-<listitem><para>The full URL of the current document, or an empty string if the
-document is unsaved.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><userinput>%URLs</userinput></term>
-<listitem><para>A space separated list of the URLs of all open documents
-(except unsaved ones).</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><userinput>%directory</userinput></term>
-<listitem><para>The directory part of the current documents URL or an empty
-string if the current document is unsaved.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><userinput>%filename</userinput></term>
-<listitem><para>The filename of the current document without the path, or an
-empty string if the current document is unsaved.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><userinput>%line</userinput></term>
-<listitem><para>The line number of the insertion cursor is in the current
-document.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><userinput>%column</userinput></term>
-<listitem><para>The column number of the insertion cursor in the current
-document.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><userinput>%selection</userinput></term>
-<listitem><para>The selected text in the current document, or an empty string
-if no text is selected</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><userinput>%text</userinput></term>
-<listitem><para>The full text of the current document. Beware that this may
-potentially exceed the maximum command length allowed on your system.
-Use with care.</para></listitem>
-</varlistentry>
-
-</variablelist>
-
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Executable</guilabel></term>
-<listitem><para>The main executable in the script. This is mandatory, and is used
-to test if the command can be run at all. A fully qualified path is allowed
-in case the executable is not in your <envar>PATH</envar> variable.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Mime types</guilabel></term>
-<listitem><para>A semicolon separated list of mimetypes for which this command
-should be enabled.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Save</guilabel></term>
-<listitem><para>You can optionally select to have the current or all documents
-saved prior to executing the script. This is handy if your script reads the file
-from disk.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Command line name</guilabel></term>
-<listitem><para>If you fill this, the tool will be available in the
-<link linkend="advanced-editing-tools-commandline">editors command line</link> as
-<command>exttool-<replaceable>Command Line Name</replaceable></command>
-(the string you enter here prepended <quote>exttool-</quote>).</para></listitem>
-</varlistentry>
-
-</variablelist>
-</sect2>
-</sect1>-->
-
- <!--
- FIXME: replaced by built-in functionality in 4.12
-        lots of this is wrong, other parts need to be moved somewhere else
-<sect1 id="kate-application-plugin-snippets">
-<sect1info>
-<authorgroup>
-<author><firstname>Martin</firstname> <surname>Gergov</surname></author>
-<author>&TC.Hollingsworth; &TC.Hollingsworth.mail;</author>
-</authorgroup>
-</sect1info>
-<title>Kate Snippets</title>
-
-<sect2 id="snippets-intro">
-<title>Introduction</title>       
-<para>Kate Snippets is a plugin used to save you some time by adding support for
-so-called <quote>snippets</quote> (re-usable source code, machine code or text). The plugin
-also supports code completion and QtScript.</para>
-</sect2>
-
-<sect2 id="snippets-menu">
-<title>Menu Structure</title>
-
-<variablelist>
-<varlistentry>
-<term><menuchoice><guimenu>View</guimenu><guisubmenu>Tool Views</guisubmenu>
-<guimenuitem>Show Snippets</guimenuitem></menuchoice></term>
-<listitem><para>Shows snippets panel containing all snippets in your repository
-that are for the currently opened file type.</para></listitem>
-</varlistentry>
-</variablelist>
-
-</sect2>
-
-<sect2 id="snippets-panel">
-<title>Snippets panel</title>
-
-<screenshot id="screenshot-snippets-panel">
-<screeninfo>Kate Snippets Panel</screeninfo>
-<mediaobject>
-<imageobject><imagedata fileref="snippets-panel.png" format="PNG"/></imageobject>
-<textobject><phrase>The &kate; snippets panel.</phrase></textobject>
-<caption><para>The panel for &kate; Snippets.</para></caption>
-</mediaobject>
-</screenshot>
-
-<para>In the panel you should see a list of snippet repositories,
-along with options to create your own, get them from the Internet or load
-them from a local file.  Each repository has a checkbox that can be used to
-activate or deactivate it.  There are also buttons to edit and delete existing
-repositories.</para>
-
-<sect3 id="snippets-repo-internet">
-<title>Loading Snippet Repository Files</title>
-<para>You can download snippet repositories from the Internet.  Just click 
-<guibutton>Get New Snippets</guibutton> and a window with a list of snippet 
-repositories will open.  After downloading the desired snippet, make sure that
-you have activated it.</para>
-<!- -FIXME no way to load a local file ?- ->
-<para>You can also load snippet repositories from a local file using the file
-browser at the bottom of the panel.  Click <guibutton>Copy to repository</guibutton>
-when finished.</para>
-</sect3>
-
-<sect3 id="snippets-repo-editor">
-<title>Creating and Editing Snippets</title>
-
-<screenshot id="screenshot-snippets-form">
-<screeninfo>Snippet Editor</screeninfo>
-<mediaobject>
-<imageobject><imagedata fileref="snippets-form.png" format="PNG"/></imageobject>
-<textobject><phrase>The snippet editor.</phrase></textobject>
-<caption><para>The snippet editor interface.</para></caption>
-</mediaobject>
-</screenshot>
-
-<para>To create a new snippet repository, click <guibutton>New Snippet File</guibutton>.
-You should now see a dialog that asks for the name of the snippet file, license and
-author.  After choosing the desired options, click <guibutton>Create</guibutton>,
-and the snippet editor will open.</para>
-
-<para>The snippet editor contains the following options:</para>
-
-<variablelist>
-<varlistentry>
-<term><guilabel>File Type</guilabel></term>
-<listitem><para>Select the file type(s) you want the snippet repository to apply
-to.  It is set to <quote>*</quote> by default, so the repository applies to all files.  You 
-can change it to something like <userinput>C++</userinput> for instance, or select
-from a list by hitting the <guibutton>Edit</guibutton>.  You can specify more
-than one file type by separating them with <userinput>;</userinput>.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Authors</guilabel></term>
-<listitem><para>Enter the name(s) of the author(s) of the snippet file.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term>Snippets List</term>
-<listitem><para>Contains all snippets defined in the snippet file.  You can
-simply click on a snippet listed there to edit it.</para></listitem>
-</varlistentry>
-    
-<varlistentry>
-<term>Add (<guibutton>+</guibutton>)</term>
-<listitem><para>Used to add a new snippet.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term>Delete (<guibutton>-</guibutton>)</term>
-<listitem><para>Used to delete a snippet.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Match/Name</guilabel></term>
-<listitem><para>Appears in the list of snippets in the tool view and is also
-searched when using the code completion feature.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Display Prefix</guilabel>, <guilabel>Display Postfix</guilabel>,
-and <guilabel>Display Arguments</guilabel></term>
-<listitem><para>Used to display helpful information while using code completion.
-The prefix and postfix are displayed before and after the name, while the arguments
-are displayed in parenthesis immediately after the name.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Snippet Content</guilabel></term>
-<listitem><para>Reusable text or code.  This is what appears in your document
-when the snippet is used.</para></listitem>
-</varlistentry>
-
-</variablelist>
-
-<para>In <guilabel>Snippet Content</guilabel> you can specify variables with 
-<userinput>${<replaceable>name</replaceable>}</userinput> or
-<userinput>%{<replaceable>name</replaceable>}</userinput>.  These can be filled
-by QtScript or when the snippet is used.  There is a special variable - 
-${cursor} or %{cursor} - which automatically sets the cursor to its first 
-occurrence.</para>
-
-</sect3>
-</sect2>
-
-<sect2 id="snippets-using">
-<title>Using Snippets</title>
-
-<screenshot id="screenshot-snippets-usage">
-<screeninfo>Kate Snippets in Action</screeninfo>
-<mediaobject>
-<imageobject><imagedata fileref="snippets-usage.png" format="PNG"/></imageobject>
-<textobject><phrase>Accessing &kate; Snippets from a tool view and a drop down menu.</phrase></textobject>
-<caption><para>Selecting from a list of snippets.</para></caption>
-</mediaobject>
-</screenshot>
-
-<para>You can call snippets in two ways:</para>
-
-<itemizedlist>
-<listitem><para>By choosing the snippet from the tool view.</para></listitem>
-<listitem><para>While writing, you can press <keycombo action="simul">&Ctrl;
-<keysym>Space</keysym></keycombo>, which will display all the snippets in a
-convenient window from which you can choose.  You may enter the beginning
-of the snippets name before or after pressing this key combination, which provides
-functionality similar to code completion.</para></listitem>
-</itemizedlist>
-
-<para>If the snippet contains variables (besides <literal>${cursor}</literal>)
-the cursor will automatically go to the first occurrence of a variable and will
-wait for you to write something. When you are done, you can press &Tab; to move
-to the next variable, and so on.</para>
-
-</sect2>
-
-<sect2 id="snippets-ack">
-<title>Thanks and Acknowledgments</title>
-<para>&kate; Snippets was written by Joseph Wenninger.</para>
-<para>Special thanks to Google Code-In 2011 participant Martin Gergov for
-writing much of this section.</para>
-</sect2>
-
-</sect1>
--->
-
-<sect1 id="kate-application-plugin-build">
-<!--http://kate-editor.org/2011/06/21/kate-plugin-updates-part-1/ -->
-<sect1info>
-<authorgroup>
-<author><firstname>Salma</firstname> <surname>Sultana</surname></author>
-<author>&TC.Hollingsworth; &TC.Hollingsworth.mail;</author>
-</authorgroup>
-</sect1info>
-<title>Build Plugin</title>
-
-<sect2 id="build-intro">
-<title>Introduction</title>
-
-<para>The Build plugin allows you to run actions like build, clean and compile
-on a project.</para>
-
-<!--When you first install Kate, you need to enable the plugin:
-
-Click `Settings → Configure Kate`
-
-In the tree on the left of the screen, click `Plugins`.
-
-In the `Plugin Manager` panel on the right, select `Build plugin`, and then click `OK`.-->
-
-</sect2>
-
-<sect2 id="build-using">
-<title>Using the Build Plugin</title>
-
-<para>The Build plugin adds a <guilabel>Build Output</guilabel> tool view at the
-bottom and a <guimenu>Build</guimenu> menu on the menubar. The tool view can be used to configure
-build target settings, while the menu can be used to perform build, clean and
-compile actions.</para>
-
-
-<para>The <guilabel>Build Output</guilabel> tool view has three tabs:</para>
-
-<itemizedlist>
-<listitem><para><guilabel>Target Settings</guilabel></para></listitem>
-<listitem><para><guilabel>Output</guilabel></para></listitem>
-<listitem><para><guilabel>Errors &amp; Warnings</guilabel></para></listitem>
-</itemizedlist>
-
-<sect3 id="build-using-target-settings">
-<title>Target Settings tab</title>
-
-<para>The target settings tab can be used to configure various build targets.</para>
-
-<para>Each target contains four configuration options:</para>
-
-<variablelist>
-<varlistentry>
-<term><guilabel>Working Directory</guilabel></term>
-<listitem><para>You can set the path to the project here. Leave this empty to
-use the directory the current document is located in.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Build</guilabel></term>
-<listitem><para>This option lets you define the build command. It is set to
-<command>make</command> by default.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Clean</guilabel></term>
-<listitem><para>The option lets you define the clean command. It is set to
-<command>make clean</command> by default.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guilabel>Quick Compile</guilabel></term>
-<listitem><para>This option lets you define the quick compile command. It is set
-to <command>gcc -Wall -g %f</command> by default.</para></listitem>
-</varlistentry>
-</variablelist>
-
-<para>One can create a new target by using the <guibutton>New</guibutton> button.
-The <guibutton>Copy</guibutton> button can be used to make a copy of an existing
-target. To delete a target, use the <guibutton>Delete</guibutton> button.</para>
-
-</sect3>
-
-<sect3 id="build-using-output">
-<title>Output tab</title>
-
-<para>The <guilabel>Output</guilabel> tab shows the console output generated by
-the last command.</para>
-
-</sect3>
-
-<sect3 id="buiid-using-errors">
-<title>Errors &amp; Warnings</title>
-
-<para>The <guilabel>Errors &amp; Warnings</guilabel> tab lists the errors and
-warnings generated by the last command.</para>
-
-<para>Each line contains a message and the file name and line number if available.
-Clicking on the error or warning takes you to the appropriate file and places
-the cursor on the corresponding line number.</para>
-
-<para>There are <guibutton>Errors</guibutton>, <guibutton>Warnings</guibutton>,
-and <guibutton>Others</guibutton> buttons at the top that allow you to show
-or hide those categories of output.</para>
-
-<!--FIXME: These shortcuts now seem to be used by the Project plugin in 4.11.
-            https://bugs.kde.org/show_bug.cgi?id=328170 -->
-<para>To navigate to the previous error, press
-<keycombo action="simul">&Ctrl;&Alt;<keysym>Left</keysym></keycombo>.
-To navigate to the next error, press
-<keycombo action="simul">&Ctrl;&Alt;<keysym>Right</keysym></keycombo>.</para>
-
-</sect3>
-</sect2>
-
-<sect2 id="build-menu">
-<title>Menu Structure</title>
-
-<variablelist>
-<varlistentry>
-<term><menuchoice>
-<guimenu>Build</guimenu><guimenuitem>Build</guimenuitem>
-</menuchoice></term>
-<listitem><para>Runs the <guilabel>Build</guilabel> command for the currently
-selected target.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<guimenu>Build</guimenu><guimenuitem>Clean</guimenuitem>
-</menuchoice></term>
-<listitem><para>Runs the <guilabel>Clean</guilabel> command for the currently
-selected target.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<guimenu>Build</guimenu><guimenuitem>Quick Compile</guimenuitem>
-</menuchoice></term>
-<listitem><para>Runs the <guilabel>Quick Compile</guilabel> command for the
-currently selected target.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<shortcut><keycombo action="simul">&Ctrl;&Alt;<keysym>Left</keysym></keycombo></shortcut>
-<guimenu>Build</guimenu><guimenuitem>Previous Error</guimenuitem>
-</menuchoice></term>
-<listitem><para>Moves the cursor to the location of the previous error in the
-document.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<shortcut><keycombo action="simul">&Ctrl;&Alt;<keysym>Right</keysym></keycombo></shortcut>
-<guimenu>Build</guimenu><guimenuitem>Next Error</guimenuitem>
-</menuchoice></term>
-<listitem><para>Moves the cursor to the location of the next error in the
-document.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<guimenu>Build</guimenu><guisubmenu>Targets</guisubmenu>
-</menuchoice></term>
-<listitem><para>Select from a list of targets configured by the user.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<guimenu>Build</guimenu><guimenuitem>Next Target</guimenuitem>
-</menuchoice></term>
-<listitem><para>Switch to the next target configured by the user.</para></listitem>
-</varlistentry>
-
-</variablelist>
-</sect2>
-
-<sect2 id="build-ack">
-<title>Thanks and Acknowledgments</title>
-<para>The &kate; Build Plugin was written by Kåre Särs.</para>
-<para>Special thanks to Google Code-In 2011 participant Salma Sultana for
-writing much of this section.</para>
-</sect2>
-</sect1>
-
-<sect1 id="kate-application-plugin-sql">
-<sect1info>
-<authorgroup>
-<author><firstname>Ömer</firstname> <othername>Faruk</othername> <surname>ORUÇ</surname></author>
-<author>&TC.Hollingsworth; &TC.Hollingsworth.mail;</author>
-</authorgroup>
-</sect1info>
-<title>SQL Plugin</title>
-
-<sect2 id="sql-intro">
-<title>Introduction</title>
-
-<para>The Structured Query Language (SQL) is a specialized language for updating,
-deleting, and requesting information from databases.</para>
-
-<para>The &kate; SQL Plugin allows you to:</para>
-
-<itemizedlist>
-<listitem><para>Create a database</para></listitem>
-<listitem><para>Connect to existing databases</para></listitem>
-<listitem><para>Insert and delete data in the database</para></listitem>
-<listitem><para>Execute queries</para></listitem>
-<listitem><para>Display results in a table</para></listitem>
-</itemizedlist>
-
-<!--If Kate is installed on your computer, at first open Kate.
-If Kate isn't installed on your computer, download and install it.
-
-Using SQL Plugin
-After opening the Kate;
-Click Settings→ Configure Kate
-and then;
-Click Application → Select Plugins in the tree widget
-
-In the Plugin Manager panel on the right, check SQL Plugin and click OK.
--->
-
-</sect2>
-
-<sect2 id="sql-connecting">
-<title>Connecting to a Database</title>
-
-<para>Select <guibutton>Add Connection</guibutton> from the <guimenu>SQL</guimenu>
-menu or toolbar, and then select the Qt database driver you want to use (including
-QSQLITE, QMYSQL3, QMYSQL, QODBC3, QODBC, QPSQL7, and QPSQL).  If you can't see
-the desired driver, you need to install it.  Then, press <guibutton>Next</guibutton>.
-</para>
-
-<para>If the database you selected uses a file, simply indicate the database's
-location and press the <guibutton>Next</guibutton> button.  If it requires connecting
-to a server, you must enter the hostname of the server, your username and password,
-and any other information that particular driver may require. Then press
-<guibutton>Next</guibutton>.</para>
-
-<para>Finally, give a name to your connection, and press <guibutton>Finish</guibutton>.</para>
-
-</sect2>
-
-<sect2 id="sql-querying">
-<title>Running Queries</title>
-
-<sect3 id="sql-querying-insert-delete-update">
-<title>INSERT/DELETE/UPDATE</title>
-
-<para>You can insert, delete, and update data using the SQL plugin just as
-you would from the command line or from within a program.  Simply enter a query
-and press the <guibutton>Run query</guibutton>.</para>
-
-<example>
-<title>Some Example Queries</title>
-<variablelist>
-
-<varlistentry>
-<term><command>INSERT</command></term>
-<listitem><para><programlisting>
-INSERT INTO <replaceable>table_name</replaceable> ("<replaceable>feature1</replaceable>", "<replaceable>feature2</replaceable>", "<replaceable>feature3</replaceable>", "<replaceable>feature4</replaceable>", "<replaceable>feature5</replaceable>")
-VALUES ("<replaceable>value1</replaceable>", "<replaceable>value2</replaceable>", "<replaceable>value3</replaceable>", "<replaceable>value4</replaceable>", "<replaceable>value5</replaceable>" )
-</programlisting></para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><command>DELETE</command></term>
-<listitem><para><programlisting>
-DELETE FROM <replaceable>table_name</replaceable> WHERE name = "<replaceable>text</replaceable>"
-</programlisting></para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><command>UPDATE</command></term>
-<listitem><para><programlisting>
-UPDATE <replaceable>table_name</replaceable> SET "<replaceable>feature1</replaceable>" = "<replaceable>text</replaceable>", "<replaceable>feature2</replaceable>" = "<replaceable>text</replaceable>", "<replaceable>feature3</replaceable>" = "<replaceable>text</replaceable>", "<replaceable>feature4</replaceable>" = "<replaceable>text</replaceable>", "<replaceable>feature5</replaceable>" = "<replaceable>text</replaceable>"
-</programlisting></para></listitem>
-</varlistentry>
-
-</variablelist>
-</example>
-
-</sect3>
-
-<sect3 id="sql-querying-select">
-<title>SELECT</title>
-
-<para>After running a  <command>SELECT</command> query, you can view the results
-as a table that will appear in the <guilabel>SQL Data Output</guilabel> tool view at
-the bottom of &kappname;, or as text in the <guilabel>SQL Text Output</guilabel>.
-If there is an error, you can see it in the text output.</para>
-
-<example>
-<title>Example <command>SELECT</command> Query</title>
-<para><programlisting>
-SELECT * FROM <replaceable>table_name</replaceable>
-</programlisting></para>
-</example>
-
-<para>In the <guilabel>SQL Data Output</guilabel> tool view, there are several buttons:</para>
-
-<variablelist>
-
-<varlistentry>
-<term><guibutton>Resize columns to contents</guibutton></term>
-<listitem><para>Changes the size of columns to fit their contents.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Resize rows to contents</guibutton></term>
-<listitem><para>Changes the size of rows to fit their contents.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Copy</guibutton></term>
-<listitem><para>Selects all of the table contents and copies it to the clipboard buffer.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Export</guibutton></term>
-<listitem><para>Exports all of the table contents to a file, the clipboard, or the
-current document in the Comma Separated Values format.</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><guibutton>Clear</guibutton></term>
-<listitem><para>Removes everything from the table view</para></listitem>
-</varlistentry>
-
-</variablelist>
-
-<para>You can now change the colors displayed in the table in the <guilabel>SQL</guilabel>
-section of <menuchoice><guimenu>Settings</guimenu><guimenuitem>Configure &kate;</guimenuitem>
-</menuchoice>.</para>
-
-</sect3>
-</sect2>
-
-<sect2 id="sql-browsing">
-<title>Browsing</title>
-
-<para>You can browse your database using the <guilabel>SQL Schema Browser</guilabel>
-tool view on the left.  The information displayed varies depending on which
-database driver you are using.</para>
-
-<para>To refresh this list, right-click anywhere in the tool view and select
-<guimenuitem>Refresh</guimenuitem>.  To generate a query on any entry in the list,
-right-click on an entry, select <guisubmenu>Generate</guisubmenu>, and select the
-query type (<guimenuitem>SELECT</guimenuitem>, <guimenuitem>UPDATE</guimenuitem>,
-<guimenuitem>INSERT</guimenuitem>, or <guimenuitem>DELETE</guimenuitem>) from
-the submenu that appears.</para>
-
-</sect2>
-
-<sect2 id="sql-menus">
-<title>Menu Structure</title>
-<variablelist>
-
-<varlistentry>
-<term><menuchoice>
-<guimenu>SQL</guimenu><guimenuitem>Add connection...</guimenuitem>
-</menuchoice></term>
-<listitem><para>
-Adds a new connection using any database driver.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<guimenu>SQL</guimenu><guimenuitem>Remove connection</guimenuitem>
-</menuchoice></term>
-<listitem><para>
-Removes the selected connection.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<guimenu>SQL</guimenu><guimenuitem>Edit connection...</guimenuitem>
-</menuchoice></term>
-<listitem><para>
-Edits the current connection's settings.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term>Connections</term>
-<listitem><para>
-All database connections you have created are listed between the
-<guimenuitem>Edit connection</guimenuitem> and <guimenuitem>Run query</guimenuitem>
-menu items.  Select one to run queries or make modifications to it.
-</para></listitem>
-</varlistentry>
-
-<varlistentry>
-<term><menuchoice>
-<shortcut><keycombo action="simul">&Ctrl;<keycap>E</keycap></keycombo></shortcut>
-<guimenu>SQL</guimenu><guimenuitem>Run query</guimenuitem>
-</menuchoice></term>
-<listitem><para>
-Runs your query.
-</para></listitem>
-</varlistentry>
-
-</variablelist>
-</sect2>
-
-<sect2 id="sql-ack">
-<title>Thanks and Acknowledgments</title>
-
-<para>The SQL Plugin was written by Marco Mentasti.</para>
-<para>Special thanks to Google Code-In 2011 participant Ömer Faruk ORUÇ for
-writing much of this section.</para>
-
-</sect2>
-
 </sect1>
 
 <sect1 id="kate-application-plugin-gdb">
@@ -1954,6 +771,753 @@ writing much of this section.</para>
 
 </sect1>
 
+<sect1 id="kate-application-plugin-searchinfiles">
+<sect1info>
+<authorgroup><author>
+&TC.Hollingsworth; &TC.Hollingsworth.mail;
+</author></authorgroup>
+</sect1info>
+<title>Search &amp; Replace</title>
+
+<sect2 id="searchinfiles-intro">
+<title>Introduction</title>
+<para>&kappname;'s Search &amp; Replace plugin allows you to search for text or
+<ulink url="help:/katepart/regular-expressions.html">regular expressions</ulink>
+in many different files at once.  You can search all open files, all the files
+in one directory and optionally its subdirectories, or all files in the current
+project.  You can even filter by filename, for instance searching only files
+that end with a particular file extension.</para>
+
+</sect2>
+
+<sect2 id="searchinfiles-ui">
+<title>Interface</title>
+
+<sect3 id="searchinfiles-ui-query">
+<title>Search Query</title>
+
+<para>The following options are always displayed at the top of the Search in
+Files tool view:</para>
+
+<variablelist>
+
+<varlistentry>
+<term><guiicon>New Tab</guiicon></term>
+<listitem><para>
+You can have as many searches as you want open at the same time.  Simply click
+the <guibutton>New Tab</guibutton> button at the top-left corner of the Search
+tool view and a new results tab will open permitting you to perform another
+search.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guiicon>Toggle Results</guiicon></term>
+<listitem><para>
+The down arrow in the top right-corner of the Search in Files tool view will
+toggle the bottom half of the tool view between displaying additional options
+for the Search in Folder mode and the results of your search.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Find</guilabel></term>
+<listitem><para>
+This is where you type in what you want to find.  You may enter standard text, 
+or a regular expression if enabled.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Replace</guilabel> (text box)</term>
+<listitem><para>
+Replacement text that will be added to file(s) in place of the text in the
+<guilabel>Find</guilabel> text box.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guibutton>Search</guibutton></term>
+<listitem><para>
+When you've finished configuring everything, just press the
+<guibutton>Search</guibutton> button to perform your search.  You may also press
+&Enter; in the <guilabel>Find</guilabel> text box to do the same.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guibutton>Replace</guibutton></term>
+<listitem><para>
+When you've finished configuring everything, just press the
+<guibutton>Replace</guibutton> button to replace the text entered in the
+<guilabel>Find</guilabel> text box with that of the <guilabel>Replace</guilabel>
+text box.  You may also press &Enter; in the <guilabel>Replace</guilabel> text 
+box to do the same.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guibutton>Next</guibutton></term>
+<listitem><para>
+Go to the next match of your search query, switching files if necessary.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guibutton>Replace checked</guibutton></term>
+<listitem><para>
+The same as <guibutton>Replace</guibutton>, but will only perform replacements
+in files that are checked in the pane below.
+</para></listitem>
+</varlistentry>
+
+</variablelist>
+</sect3>
+
+<sect3 id="searchinfiles-ui-folder">
+<title>Search in Folder Options</title>
+
+<para>These options are displayed below the aforementioned query options. If search
+results are being displayed instead, press the <guiicon>Toggle Results</guiicon>
+button to display them.</para>
+
+<variablelist>
+
+<varlistentry>
+<term><guilabel>Match case</guilabel></term>
+<listitem><para>
+Restricts search results to only those that have the exact same combination
+of upper and lower case letters as your search query.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Regular expressions</guilabel></term>
+<listitem><para>
+Permits you to use <ulink url="help:/katepart/regular-expressions.html">regular
+expressions</ulink> instead of simple text as your search query.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Expand results</guilabel></term>
+<listitem><para>
+Display all the results found in each file, instead of just a list of files
+that contain the search query.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Search</guilabel></term>
+<listitem><para>
+This has three options.  Select <guilabel>in Open files</guilabel> to search all
+files currently open in &kappname;.  Select <guilabel>in Folder</guilabel> to
+search inside a folder and optionally its subfolders.  Select <guilabel>in
+Project</guilabel> to search all the files listed in the currently open project.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Folder</guilabel></term>
+<listitem><para>
+You may enter the path of the folder you wish to search.  For instance, you might
+enter <userinput>~/development/kde/kate/</userinput> if you wished to search the
+&kate; source code.  This option is only available when using 
+<guilabel>in Folder</guilabel> mode.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guiicon>Open file dialog</guiicon></term>
+<listitem><para>
+Press this button to locate the folder in your desktop's folder browser. This 
+button only works when using <guilabel>in Folder</guilabel> mode.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guiicon>Up</guiicon></term>
+<listitem><para>
+Press this button to change <guilabel>Folder</guilabel> to the parent of the
+currently selected folder. This button only works when using 
+<guilabel>in Folder</guilabel> mode.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guiicon>Restore Current Folder</guiicon></term>
+<listitem><para>
+This button will set the <guilabel>Folder</guilabel> entry to the folder in which
+the currently open document is located. This  button only works when using 
+<guilabel>in Folder</guilabel> mode.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Filter</guilabel></term>
+<listitem><para>
+This permits you to only search filenames that match a particular pattern.  For
+instance, to only search files written in C++, change it to
+<userinput>*.cpp</userinput>.  To search only files beginning with
+<literal>kate</literal>, change it to <userinput>kate*</userinput>.  You can
+enter multiple filters separated with a comma (<userinput>,</userinput>).  This
+option is not available when using <guilabel>in Open files</guilabel> mode.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Exclude</guilabel></term>
+<listitem><para>
+The opposite of <guilabel>Filter</guilabel>, this prevents &kappname; from
+searching files that match the specified patterns.  As with 
+<guilabel>Filter</guilabel>, you can enter multiple patterns separated with a 
+comma (<userinput>,</userinput>). This option is not available when using
+<guilabel>in Open files</guilabel> mode.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Recursive</guilabel></term>
+<listitem><para>
+If this option is enabled, &kappname; will also search in all subfolders of the
+selected folder. This option is only available when using 
+<guilabel>in Folder</guilabel> mode.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Include hidden</guilabel></term>
+<listitem><para>
+If this option is enabled, &kappname; will also search in files or folders that
+are typically hidden by your &OS;. This option is only available when using 
+<guilabel>in Folder</guilabel> mode.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Follow symbolic links</guilabel></term>
+<listitem><para>
+The Search in Files plugin typically doesn't follow
+<ulink url="http://en.wikipedia.org/wiki/Symbolic_link">symbolic links</ulink>.
+When this option is enabled, the plugin will follow them instead and search inside
+the files or folders they reference. This option is only available when using 
+<guilabel>in Folder</guilabel> mode.
+</para>
+<warning><para>It's possible for symbolic links to reference a folder that is the
+parent of the folder currently being searched, or other folders that contain
+symbolic links to their parent.  If there is such a link in the folder being
+searched and this option is enabled, &kappname; will repeatedly follow the link
+and search the folder, and the search will never complete.</para></warning>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Include binary files</guilabel></term>
+<listitem><para>
+If enabled, &kappname; will also search in files that do not appear to be text
+files.
+</para></listitem>
+</varlistentry>
+
+</variablelist>
+</sect3>
+
+<sect3 id="searchinfiles-ui-results">
+<title>Search Results</title>
+
+<para>The results of your search are displayed below the query options.  If
+options for Search in Folder mode are displayed, simply press the
+<guiicon>Toggle Results</guiicon> button to display them.  They will also
+automatically be displayed as soon as a search is performed.</para>
+
+<para>The search results display a list of files that contains text that matches
+your search query, followed by the number of matches found in that file.</para>
+
+<para>To see a list of matches in that file, simply click the expansion arrow
+to the left of the file name.  (If you selected the <guilabel>Expand 
+results</guilabel> option, this will already be done for you.)  The line number
+each match is found on will be displayed, followed by the contents of that line,
+with your search query indicated in bold text.</para>
+
+<para>To open the file your result was found in, simply double-click it.  &kappname;
+will open the file if needed.  You can also move the cursor to the location of
+a particular match by double-clicking on its listing instead of the file name.
+</para>
+
+</sect3>
+</sect2>
+
+<sect2 id="searchinfiles-menu">
+<title>Menu Structure</title>
+
+<variablelist>
+
+<varlistentry id="edit-searchinfiles">
+<term><menuchoice>
+<guimenu>Edit</guimenu>
+<guimenuitem>Search in Files</guimenuitem>
+</menuchoice></term>
+<listitem>
+<para>Launches the Search and Replace tool view.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry id="edit-next-match">
+<term><menuchoice>
+<guimenu>Edit</guimenu>
+<guimenuitem>Go to Next Match</guimenuitem>
+</menuchoice></term>
+<listitem>
+<para>Go to the next match in a search performed by the Search and Replace
+plugin.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry id="edit-previous-match">
+<term><menuchoice>
+<guimenu>Edit</guimenu>
+<guimenuitem>Go to Previous Match</guimenuitem>
+</menuchoice></term>
+<listitem>
+<para>Go to the previous match in a search performed by the Search and Replace
+plugin.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry id="view-toolviews-searchandreplace">
+<term><menuchoice>
+<guimenu>View</guimenu><guisubmenu>Tool Views</guisubmenu>
+<guimenuitem>Show Search and Replace</guimenuitem>
+</menuchoice></term>
+<listitem>
+<para>Toggle the display of &kappname;'s <guilabel>Search and Replace</guilabel> tool.
+</para>
+</listitem>
+</varlistentry>
+
+</variablelist>
+
+</sect2>
+</sect1>
+
+ <!--
+ FIXME: replaced by built-in functionality in 4.12
+        lots of this is wrong, other parts need to be moved somewhere else -->
+<sect1 id="kate-application-plugin-snippets">
+<sect1info>
+<authorgroup>
+<author><firstname>Martin</firstname> <surname>Gergov</surname></author>
+<author>&TC.Hollingsworth; &TC.Hollingsworth.mail;</author>
+</authorgroup>
+</sect1info>
+<title>Kate Snippets</title>
+
+<sect2 id="snippets-intro">
+<title>Introduction</title>       
+<para>Kate Snippets is a plugin used to save you some time by adding support for
+so-called <quote>snippets</quote> (re-usable source code, machine code or text). The plugin
+also supports code completion and QtScript.</para>
+</sect2>
+
+<sect2 id="snippets-menu">
+<title>Menu Structure</title>
+
+<variablelist>
+<varlistentry>
+<term><menuchoice><guimenu>View</guimenu><guisubmenu>Tool Views</guisubmenu>
+<guimenuitem>Show Snippets</guimenuitem></menuchoice></term>
+<listitem><para>Shows snippets panel containing all snippets in your repository
+that are for the currently opened file type.</para></listitem>
+</varlistentry>
+</variablelist>
+
+</sect2>
+
+<sect2 id="snippets-panel">
+<title>Snippets panel</title>
+
+<screenshot id="screenshot-snippets-panel">
+<screeninfo>Kate Snippets Panel</screeninfo>
+<mediaobject>
+<imageobject><imagedata fileref="snippets-panel.png" format="PNG"/></imageobject>
+<textobject><phrase>The &kate; snippets panel.</phrase></textobject>
+<caption><para>The panel for &kate; Snippets.</para></caption>
+</mediaobject>
+</screenshot>
+
+<para>In the panel you should see a list of snippet repositories,
+along with options to create your own, get them from the Internet or load
+them from a local file.  Each repository has a checkbox that can be used to
+activate or deactivate it.  There are also buttons to edit and delete existing
+repositories.</para>
+
+<sect3 id="snippets-repo-internet">
+<title>Loading Snippet Repository Files</title>
+<para>You can download snippet repositories from the Internet.  Just click 
+<guibutton>Get New Snippets</guibutton> and a window with a list of snippet 
+repositories will open.  After downloading the desired snippet, make sure that
+you have activated it.</para>
+<!--FIXME no way to load a local file ?-->
+<para>You can also load snippet repositories from a local file using the file
+browser at the bottom of the panel.  Click <guibutton>Copy to repository</guibutton>
+when finished.</para>
+</sect3>
+
+<sect3 id="snippets-repo-editor">
+<title>Creating and Editing Snippets</title>
+
+<screenshot id="screenshot-snippets-form">
+<screeninfo>Snippet Editor</screeninfo>
+<mediaobject>
+<imageobject><imagedata fileref="snippets-form.png" format="PNG"/></imageobject>
+<textobject><phrase>The snippet editor.</phrase></textobject>
+<caption><para>The snippet editor interface.</para></caption>
+</mediaobject>
+</screenshot>
+
+<para>To create a new snippet repository, click <guibutton>New Snippet File</guibutton>.
+You should now see a dialog that asks for the name of the snippet file, license and
+author.  After choosing the desired options, click <guibutton>Create</guibutton>,
+and the snippet editor will open.</para>
+
+<para>The snippet editor contains the following options:</para>
+
+<variablelist>
+<varlistentry>
+<term><guilabel>File Type</guilabel></term>
+<listitem><para>Select the file type(s) you want the snippet repository to apply
+to.  It is set to <quote>*</quote> by default, so the repository applies to all files.  You 
+can change it to something like <userinput>C++</userinput> for instance, or select
+from a list by hitting the <guibutton>Edit</guibutton>.  You can specify more
+than one file type by separating them with <userinput>;</userinput>.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Authors</guilabel></term>
+<listitem><para>Enter the name(s) of the author(s) of the snippet file.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term>Snippets List</term>
+<listitem><para>Contains all snippets defined in the snippet file.  You can
+simply click on a snippet listed there to edit it.</para></listitem>
+</varlistentry>
+    
+<varlistentry>
+<term>Add (<guibutton>+</guibutton>)</term>
+<listitem><para>Used to add a new snippet.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term>Delete (<guibutton>-</guibutton>)</term>
+<listitem><para>Used to delete a snippet.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Match/Name</guilabel></term>
+<listitem><para>Appears in the list of snippets in the tool view and is also
+searched when using the code completion feature.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Display Prefix</guilabel>, <guilabel>Display Postfix</guilabel>,
+and <guilabel>Display Arguments</guilabel></term>
+<listitem><para>Used to display helpful information while using code completion.
+The prefix and postfix are displayed before and after the name, while the arguments
+are displayed in parenthesis immediately after the name.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guilabel>Snippet Content</guilabel></term>
+<listitem><para>Reusable text or code.  This is what appears in your document
+when the snippet is used.</para></listitem>
+</varlistentry>
+
+</variablelist>
+
+<para>In <guilabel>Snippet Content</guilabel> you can specify variables with 
+<userinput>${<replaceable>name</replaceable>}</userinput> or
+<userinput>%{<replaceable>name</replaceable>}</userinput>.  These can be filled
+by QtScript or when the snippet is used.  There is a special variable - 
+${cursor} or %{cursor} - which automatically sets the cursor to its first 
+occurrence.</para>
+
+</sect3>
+</sect2>
+
+<sect2 id="snippets-using">
+<title>Using Snippets</title>
+
+<screenshot id="screenshot-snippets-usage">
+<screeninfo>Kate Snippets in Action</screeninfo>
+<mediaobject>
+<imageobject><imagedata fileref="snippets-usage.png" format="PNG"/></imageobject>
+<textobject><phrase>Accessing &kate; Snippets from a tool view and a drop down menu.</phrase></textobject>
+<caption><para>Selecting from a list of snippets.</para></caption>
+</mediaobject>
+</screenshot>
+
+<para>You can call snippets in two ways:</para>
+
+<itemizedlist>
+<listitem><para>By choosing the snippet from the tool view.</para></listitem>
+<listitem><para>While writing, you can press <keycombo action="simul">&Ctrl;
+<keysym>Space</keysym></keycombo>, which will display all the snippets in a
+convenient window from which you can choose.  You may enter the beginning
+of the snippets name before or after pressing this key combination, which provides
+functionality similar to code completion.</para></listitem>
+</itemizedlist>
+
+<para>If the snippet contains variables (besides <literal>${cursor}</literal>)
+the cursor will automatically go to the first occurrence of a variable and will
+wait for you to write something. When you are done, you can press &Tab; to move
+to the next variable, and so on.</para>
+
+</sect2>
+
+<sect2 id="snippets-ack">
+<title>Thanks and Acknowledgments</title>
+<para>&kate; Snippets was written by Joseph Wenninger.</para>
+<para>Special thanks to Google Code-In 2011 participant Martin Gergov for
+writing much of this section.</para>
+</sect2>
+
+</sect1>
+
+
+<sect1 id="kate-application-plugin-sql">
+<sect1info>
+<authorgroup>
+<author><firstname>Ömer</firstname> <othername>Faruk</othername> <surname>ORUÇ</surname></author>
+<author>&TC.Hollingsworth; &TC.Hollingsworth.mail;</author>
+</authorgroup>
+</sect1info>
+<title>SQL Plugin</title>
+
+<sect2 id="sql-intro">
+<title>Introduction</title>
+
+<para>The Structured Query Language (SQL) is a specialized language for updating,
+deleting, and requesting information from databases.</para>
+
+<para>The &kate; SQL Plugin allows you to:</para>
+
+<itemizedlist>
+<listitem><para>Create a database</para></listitem>
+<listitem><para>Connect to existing databases</para></listitem>
+<listitem><para>Insert and delete data in the database</para></listitem>
+<listitem><para>Execute queries</para></listitem>
+<listitem><para>Display results in a table</para></listitem>
+</itemizedlist>
+
+<!--FIXME If Kate is installed on your computer, at first open Kate.
+If Kate isn't installed on your computer, download and install it.
+
+Using SQL Plugin
+After opening the Kate;
+Click Settings→ Configure Kate
+and then;
+Click Application → Select Plugins in the tree widget
+
+In the Plugin Manager panel on the right, check SQL Plugin and click OK.
+-->
+
+</sect2>
+
+<sect2 id="sql-connecting">
+<title>Connecting to a Database</title>
+
+<para>Select <guibutton>Add Connection</guibutton> from the <guimenu>SQL</guimenu>
+menu or toolbar, and then select the Qt database driver you want to use (including
+QSQLITE, QMYSQL3, QMYSQL, QODBC3, QODBC, QPSQL7, and QPSQL).  If you can't see
+the desired driver, you need to install it.  Then, press <guibutton>Next</guibutton>.
+</para>
+
+<para>If the database you selected uses a file, simply indicate the database's
+location and press the <guibutton>Next</guibutton> button.  If it requires connecting
+to a server, you must enter the hostname of the server, your username and password,
+and any other information that particular driver may require. Then press
+<guibutton>Next</guibutton>.</para>
+
+<para>Finally, give a name to your connection, and press <guibutton>Finish</guibutton>.</para>
+
+</sect2>
+
+<sect2 id="sql-querying">
+<title>Running Queries</title>
+
+<sect3 id="sql-querying-insert-delete-update">
+<title>INSERT/DELETE/UPDATE</title>
+
+<para>You can insert, delete, and update data using the SQL plugin just as
+you would from the command line or from within a program.  Simply enter a query
+and press the <guibutton>Run query</guibutton>.</para>
+
+<example>
+<title>Some Example Queries</title>
+<variablelist>
+
+<varlistentry>
+<term><command>INSERT</command></term>
+<listitem><para><programlisting>
+INSERT INTO <replaceable>table_name</replaceable> ("<replaceable>feature1</replaceable>", "<replaceable>feature2</replaceable>", "<replaceable>feature3</replaceable>", "<replaceable>feature4</replaceable>", "<replaceable>feature5</replaceable>")
+VALUES ("<replaceable>value1</replaceable>", "<replaceable>value2</replaceable>", "<replaceable>value3</replaceable>", "<replaceable>value4</replaceable>", "<replaceable>value5</replaceable>" )
+</programlisting></para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><command>DELETE</command></term>
+<listitem><para><programlisting>
+DELETE FROM <replaceable>table_name</replaceable> WHERE name = "<replaceable>text</replaceable>"
+</programlisting></para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><command>UPDATE</command></term>
+<listitem><para><programlisting>
+UPDATE <replaceable>table_name</replaceable> SET "<replaceable>feature1</replaceable>" = "<replaceable>text</replaceable>", "<replaceable>feature2</replaceable>" = "<replaceable>text</replaceable>", "<replaceable>feature3</replaceable>" = "<replaceable>text</replaceable>", "<replaceable>feature4</replaceable>" = "<replaceable>text</replaceable>", "<replaceable>feature5</replaceable>" = "<replaceable>text</replaceable>"
+</programlisting></para></listitem>
+</varlistentry>
+
+</variablelist>
+</example>
+
+</sect3>
+
+<sect3 id="sql-querying-select">
+<title>SELECT</title>
+
+<para>After running a  <command>SELECT</command> query, you can view the results
+as a table that will appear in the <guilabel>SQL Data Output</guilabel> tool view at
+the bottom of &kappname;, or as text in the <guilabel>SQL Text Output</guilabel>.
+If there is an error, you can see it in the text output.</para>
+
+<example>
+<title>Example <command>SELECT</command> Query</title>
+<para><programlisting>
+SELECT * FROM <replaceable>table_name</replaceable>
+</programlisting></para>
+</example>
+
+<para>In the <guilabel>SQL Data Output</guilabel> tool view, there are several buttons:</para>
+
+<variablelist>
+
+<varlistentry>
+<term><guibutton>Resize columns to contents</guibutton></term>
+<listitem><para>Changes the size of columns to fit their contents.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guibutton>Resize rows to contents</guibutton></term>
+<listitem><para>Changes the size of rows to fit their contents.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guibutton>Copy</guibutton></term>
+<listitem><para>Selects all of the table contents and copies it to the clipboard buffer.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guibutton>Export</guibutton></term>
+<listitem><para>Exports all of the table contents to a file, the clipboard, or the
+current document in the Comma Separated Values format.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><guibutton>Clear</guibutton></term>
+<listitem><para>Removes everything from the table view</para></listitem>
+</varlistentry>
+
+</variablelist>
+
+<para>You can now change the colors displayed in the table in the <guilabel>SQL</guilabel>
+section of <menuchoice><guimenu>Settings</guimenu><guimenuitem>Configure &kate;</guimenuitem>
+</menuchoice>.</para>
+
+</sect3>
+</sect2>
+
+<sect2 id="sql-browsing">
+<title>Browsing</title>
+
+<para>You can browse your database using the <guilabel>SQL Schema Browser</guilabel>
+tool view on the left.  The information displayed varies depending on which
+database driver you are using.</para>
+
+<para>To refresh this list, right-click anywhere in the tool view and select
+<guimenuitem>Refresh</guimenuitem>.  To generate a query on any entry in the list,
+right-click on an entry, select <guisubmenu>Generate</guisubmenu>, and select the
+query type (<guimenuitem>SELECT</guimenuitem>, <guimenuitem>UPDATE</guimenuitem>,
+<guimenuitem>INSERT</guimenuitem>, or <guimenuitem>DELETE</guimenuitem>) from
+the submenu that appears.</para>
+
+</sect2>
+
+<sect2 id="sql-menus">
+<title>Menu Structure</title>
+<variablelist>
+
+<varlistentry>
+<term><menuchoice>
+<guimenu>SQL</guimenu><guimenuitem>Add connection...</guimenuitem>
+</menuchoice></term>
+<listitem><para>
+Adds a new connection using any database driver.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><menuchoice>
+<guimenu>SQL</guimenu><guimenuitem>Remove connection</guimenuitem>
+</menuchoice></term>
+<listitem><para>
+Removes the selected connection.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><menuchoice>
+<guimenu>SQL</guimenu><guimenuitem>Edit connection...</guimenuitem>
+</menuchoice></term>
+<listitem><para>
+Edits the current connection's settings.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term>Connections</term>
+<listitem><para>
+All database connections you have created are listed between the
+<guimenuitem>Edit connection</guimenuitem> and <guimenuitem>Run query</guimenuitem>
+menu items.  Select one to run queries or make modifications to it.
+</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><menuchoice>
+<shortcut><keycombo action="simul">&Ctrl;<keycap>E</keycap></keycombo></shortcut>
+<guimenu>SQL</guimenu><guimenuitem>Run query</guimenuitem>
+</menuchoice></term>
+<listitem><para>
+Runs your query.
+</para></listitem>
+</varlistentry>
+
+</variablelist>
+</sect2>
+
+<sect2 id="sql-ack">
+<title>Thanks and Acknowledgments</title>
+
+<para>The SQL Plugin was written by Marco Mentasti.</para>
+<para>Special thanks to Google Code-In 2011 participant Ömer Faruk ORUÇ for
+writing much of this section.</para>
+
+</sect2>
+
+</sect1>
+
 <sect1 id="kate-application-plugin-konsole">
 <title>Terminal Tool View Plugin</title>
 
@@ -1983,14 +1547,11 @@ which is enabled by default.</para>
 
 <variablelist>
 
-<varlistentry>
-<term>
-<anchor id="view-toolviews-show-konsole"/>
-<menuchoice>
+<varlistentry id="view-toolviews-show-terminal">
+<term><menuchoice>
 <guimenu>View</guimenu><guisubmenu>Tool Views</guisubmenu>
 <guimenuitem>Show Terminal</guimenuitem>
-</menuchoice>
-</term>
+</menuchoice></term>
 <listitem>
 <para>Toggles the display of the built-in terminal emulator.</para>
 <para>When activated for the first time, the terminal will be created.</para>
@@ -2004,15 +1565,15 @@ change to the directory of the active document, if it is a local file.</para>
 </listitem>
 </varlistentry>
 
-<varlistentry>
+<varlistentry id="view-toolviews-pipe-to-terminal">
 <term><menuchoice><guimenu>Tools</guimenu><guimenuitem>Pipe to
 Terminal</guimenuitem></menuchoice></term>
 <listitem><para>Feed the currently selected text into the built-in terminal
 emulator. No newline is added after the text.</para></listitem>
 </varlistentry>
 
-<varlistentry>
-<term><anchor id="tools-sync-terminal-document"/><menuchoice>
+<varlistentry id="tools-sync-terminal-document">
+<term><menuchoice>
 <guimenu>Tools</guimenu>
 <guimenuitem>Synchronize Terminal with Current Document</guimenuitem></menuchoice></term>
 <listitem>
@@ -2025,10 +1586,11 @@ sync with the current document.  See
 </listitem>
 </varlistentry>
 
-<varlistentry>
-<term><anchor id="tools-focus-terminal"/><menuchoice>
+<varlistentry id="tools-focus-terminal">
+<term><menuchoice>
 <guimenu>Tools</guimenu>
-<guimenuitem>Focus/Defocus Terminal</guimenuitem></menuchoice></term>
+<guimenuitem>Focus/Defocus Terminal</guimenuitem>
+</menuchoice></term>
 <listitem>
 <para>Switch the focus from the current document to the terminal and vice versa.
 </para>
@@ -2072,7 +1634,156 @@ so the calling program is aware you have finished editing the file.</para></list
 
 </sect1>
 
-<!--
+<!-- from doc/kate-addons/xmlcheck.docbook -->
+<sect1 id="kate-application-plugin-xmltools">
+<sect1info>
+<authorgroup><author>
+&Daniel.Naber; &Daniel.Naber.mail;
+</author></authorgroup>
+</sect1info>
+<title>&XML; Completion</title>
+
+<para>This plugin gives hints about what is allowed at a certain position in
+an &XML; file, according to the file's DTD. It will list possible
+elements, attributes, attribute values or entities, depending on the
+cursor position (&eg; all entities are listed if the character on the left
+of the cursor is <quote>&amp;</quote>). It's also possible to close the nearest
+open tag on the left.</para>
+
+<para>The <acronym>DTD</acronym> must exist in &XML; format, as produced by the Perl program
+<command>dtdparse</command>. We will call a DTD in this format <quote>meta DTD</quote>.
+Some meta DTDs are supplied. They are installed in
+<filename class="directory">$KDEDIR/share/apps/katexmltools/</filename>,
+which is also the default folder when you choose
+<guimenuitem>Assign Meta DTD...</guimenuitem>.
+To produce your own meta DTDs, get <command>dtdparse</command> from
+<ulink url="http://dtdparse.sourceforge.net">http://dtdparse.sourceforge.net</ulink>.</para>
+
+<sect2 id="xmltools-how-to-use">
+<title>How to Use</title>
+
+<para>Start &kate; and open the configuration dialog under <menuchoice><guimenu>Settings</guimenu>
+<guimenuitem>Configure &kate;...</guimenuitem></menuchoice>.
+Then select <guilabel>&XML; Completion</guilabel> which will appear
+in the <menuchoice><guimenu>Application</guimenu>
+<guimenuitem>Plugins</guimenuitem></menuchoice> page and close the dialog. After
+that, select <menuchoice><guimenu>&XML;</guimenu><guimenuitem>Assign Meta DTD...</guimenuitem></menuchoice>.
+If your document contains no <quote>DOCTYPE</quote> or the doctype is unknown, you will have to
+select a meta DTD from the file system. Otherwise the meta DTD that
+matches the current document's DOCTYPE will be loaded automatically.</para>
+
+<para>You can now use the plugin while typing your text:</para>
+
+<variablelist>
+
+<varlistentry>
+<term><keycap>&lt;</keycap> (less than key)</term>
+<listitem><para>This will trigger a list of possible elements unless the
+cursor is inside a tag already. Note that you currently cannot use
+this to insert the top level element (&eg; <quote>&lt;html&gt;</quote>).</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><keycap>&lt;</keycap><keycap>/</keycap>(less than key + slash)</term>
+<listitem><para>Entering these characters will offer to close the current element
+(nearest open one to the left of the cursor). Press &Enter; to accept the suggestion.
+Unlike the <guimenuitem>Close Element</guimenuitem> menu item, this works only with
+a DTD assigned.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><keycap>"</keycap> (quote key)</term>
+<listitem><para>The quote key will trigger a list of possible attribute
+values (if there are any) if you are inside a tag.</para></listitem>
+</varlistentry>
+
+<varlistentry>
+<term><keycap>&nbsp;</keycap> (space key)</term>
+<listitem><para>This key will trigger a list of possible attributes for the
+current element if you are inside a tag.</para>
+</listitem>
+</varlistentry>
+
+<varlistentry>
+<term><keycap>&amp;</keycap> (ampersand key)</term>
+<listitem><para>This key will trigger a list of named entities.</para></listitem>
+</varlistentry>
+</variablelist>
+
+</sect2>
+
+<sect2 id="xmltools-features-and-limitations">
+<title>Features and Limitations</title>
+
+<para>You can test all functions and limitations by loading
+<filename>$KDEDIR/share/apps/katexmltools/testcases.xml</filename><!--FIXME replacement for KDEDIRS-->
+into &kate; and following the instructions.</para>
+
+</sect2>
+
+
+<sect2 id="xmltools-menu">
+<title>Menu Structure</title>
+
+<variablelist id="xml-insert-element">
+<varlistentry>
+<term><menuchoice>
+<shortcut>
+<keycombo action="simul">&Ctrl;<keycap>Return</keycap></keycombo>
+</shortcut>
+<guimenu>&XML;</guimenu>
+<guimenuitem>Insert Element...</guimenuitem>
+</menuchoice></term>
+<listitem><para>This will open a dialog that lets you insert an &XML; element.
+The &lt;, &gt; characters and the closing tag will be inserted automatically.
+If you have selected text when this menu item is selected, the selected
+text will be surrounded by the opening and the closing tag.
+The dialog also offers completion of all elements that may be inserted
+at the current cursor position if you have assigned a meta DTD by
+using <guimenuitem>Assign Meta DTD...</guimenuitem>.
+</para></listitem>
+</varlistentry>
+
+<varlistentry id="xml-close-element">
+<term><menuchoice>
+<shortcut>
+<keycombo action="simul">&Ctrl;<keycap>&lt;</keycap></keycombo>
+</shortcut>
+<guimenu>&XML;</guimenu>
+<guimenuitem>Close Element</guimenuitem>
+</menuchoice></term>
+<listitem><para>This will search your text for a tag that is not yet closed
+and will close it by inserting the corresponding closing tag.
+The search starts at the cursor position and goes left. If
+it cannot find an open tag nothing will happen.</para></listitem>
+</varlistentry>
+
+<varlistentry id="xml-assign-metadtd">
+<term><menuchoice>
+<guimenu>&XML;</guimenu>
+<guimenuitem>Assign Meta DTD...</guimenuitem>
+</menuchoice></term>
+<listitem><para>This will tell the plugin which meta DTD to use for the
+current document. Note that this assignment will not be saved.
+You will have to repeat it when you start &kate; the next time.</para></listitem>
+</varlistentry>
+</variablelist>
+
+</sect2>
+
+<sect2 id="xmltools-thanks-and-acknowledgements">
+<title>Thanks and Acknowledgments</title>
+<para>
+&kate; Plugin <quote>&XML; Completion</quote> copyright 2001,2002 &Daniel.Naber;
+&Daniel.Naber.mail;.
+</para>
+<para>KDE SC 4 version copyright 2010 Tomáš Trnka</para>
+<para>Documentation copyright 2001,2002 &Daniel.Naber;</para>
+</sect2>
+</sect1>
+
+
+<!--FIXME
 Missing (according to config docs)
 Additional pages for enabled plugins:
 Backtrace Browser
