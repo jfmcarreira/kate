@@ -27,9 +27,8 @@
 #include <QHash>
 #include <QIcon>
 
-class QResizeEvent;
 class KateTabButton;
-class KConfigBase;
+class KateTabBarPrivate;
 
 /**
  * The \p KateTabBar class provides a tab bar, e.g. for tabbed documents.
@@ -200,59 +199,35 @@ protected Q_SLOTS:
     void tabButtonCloseRequest(KateTabButton *tabButton);
 
 protected:
-    /**
-     * Recalculate geometry for all tabs.
-     */
-    void resizeEvent(QResizeEvent *event) Q_DECL_OVERRIDE;
+    //! Recalculate geometry for all tabs.
+    void resizeEvent(QResizeEvent *event) override;
 
-    /**
-     * Override to avoid requesting a new tab.
-     */
-    void mouseDoubleClickEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    //! Override to avoid requesting a new tab.
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
 
-    /**
-     * Override to request making the tab bar active.
-     */
-    void mousePressEvent(QMouseEvent *event) Q_DECL_OVERRIDE;
+    //! Override to request making the tab bar active.
+    void mousePressEvent(QMouseEvent *event) override;
 
-    /** trigger repaint on hover leave event */
-    void leaveEvent(QEvent *event) Q_DECL_OVERRIDE;
+    //! trigger repaint on hover leave event
+    void leaveEvent(QEvent *event) override;
 
-    /** Paint tab separators */
-    void paintEvent(QPaintEvent *event) Q_DECL_OVERRIDE;
+    //! Paint tab separators
+    void paintEvent(QPaintEvent *event) override;
 
-    /** Request context menu */
+    //! Request context menu
     void contextMenuEvent(QContextMenuEvent *ev);
 
-    /** Cycle through tabs */
-    void wheelEvent(QWheelEvent * event) Q_DECL_OVERRIDE;
+    //! Cycle through tabs
+    void wheelEvent(QWheelEvent * event) override;
 
-protected:
-    /**
-     * Set tab geometry. The tabs are animated only if @p animate is @e true.
-     */
-    void updateButtonPositions(bool animate = false);
+    //! Support for drag & drop of tabs
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
+    void dropEvent(QDropEvent *event) override;
 
 private:
-    // minimum and maximum tab width
-    int m_minimumTabWidth;
-    int m_maximumTabWidth;
-
-    // current tab width: when closing tabs with the mouse, we keep
-    // the tab width fixed until the mouse leaves the tab bar. This
-    // way the user can keep clicking the close button without moving
-    // the ouse.
-    qreal m_currentTabWidth;
-    bool m_keepTabWidth;
-
-    bool m_isActiveViewSpace;
-
-    QVector<KateTabButton *> m_tabButtons;
-    QHash<int, KateTabButton *> m_idToTab;
-
-    KateTabButton *m_activeButton;
-
-    int m_nextID;
+    // pimpl data holder
+    KateTabBarPrivate * const d;
 };
 
 #endif // KATE_TAB_BAR_H

@@ -32,9 +32,8 @@ Item {
     width: (Plasmoid.formFactor==PlasmaCore.Types.Planar)? units.gridUnit * 14 : undefined
     height: (Plasmoid.formFactor==PlasmaCore.Types.Planar)? units.gridUnit * 16: undefined
     
-
-    Plasmoid.switchWidth: units.gridUnit * 6
-    Plasmoid.switchHeight: units.gridUnit * 5
+    Plasmoid.switchWidth: units.gridUnit * 11
+    Plasmoid.switchHeight: units.gridUnit * 11    
     Plasmoid.status: PlasmaCore.Types.ActiveStatus
     Plasmoid.toolTipMainText: i18n("Kate Sessions")
     Plasmoid.icon: "kate"
@@ -66,8 +65,8 @@ Item {
     Plasmoid.fullRepresentation: Item {
 
         id: dialogItem
-        Layout.minimumWidth: units.iconSizes.medium * 9
-        Layout.minimumHeight: units.gridUnit * 16
+        Layout.minimumWidth: units.gridUnit * 12
+        Layout.minimumHeight: units.gridUnit * 12
 
         focus: true
 

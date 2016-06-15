@@ -430,10 +430,10 @@ void KateViewManager::documentSavedOrUploaded(KTextEditor::Document *doc, bool)
     }
 }
 
-bool KateViewManager::createView(KTextEditor::Document *doc, KateViewSpace *vs)
+KTextEditor::View *KateViewManager::createView(KTextEditor::Document *doc, KateViewSpace *vs)
 {
     if (m_blockViewCreationAndActivation) {
-        return false;
+        return nullptr;
     }
 
     // create doc
@@ -472,7 +472,7 @@ bool KateViewManager::createView(KTextEditor::Document *doc, KateViewSpace *vs)
         activateView(view);
     }
 
-    return true;
+    return view;
 }
 
 bool KateViewManager::deleteView(KTextEditor::View *view)
@@ -1015,6 +1015,9 @@ void KateViewManager::restoreViewConfiguration(const KConfigGroup &config)
         m_viewSpaceList.at(lastViewSpace)->currentView()->setFocus();
     }
 
+    // remove hidden view spaces (users will likely never find them again, #358266)
+    removeHiddenViewSpaces();
+
     // emergency
     if (m_viewSpaceList.empty()) {
         // kill bad children
@@ -1037,6 +1040,30 @@ void KateViewManager::restoreViewConfiguration(const KConfigGroup &config)
     }
 
     updateViewSpaceActions();
+}
+
+void KateViewManager::removeHiddenViewSpaces()
+{
+    // collect all empty view spaces
+    QSet<KateViewSpace *> hiddenViewSpaces;
+    foreach (KateViewSpace *vs, m_viewSpaceList) {
+        if (vs->size().isEmpty()) {
+            hiddenViewSpaces.insert(vs);
+        }
+    }
+
+    // get all child splitters
+    const QList<QSplitter *> splitters = findChildren<QSplitter *>();
+    foreach (QSplitter * splitter, splitters) {
+        if (splitter->size().isEmpty()) {
+            hiddenViewSpaces += findChildren<KateViewSpace *>().toSet();
+        }
+    }
+
+    // finally remove all empty view spaces
+    foreach (KateViewSpace * vs, hiddenViewSpaces) {
+        removeViewSpace(vs);
+    }
 }
 
 void KateViewManager::saveSplitterConfig(QSplitter *s, KConfigBase *configBase, const QString &viewConfGrp)
