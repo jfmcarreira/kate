@@ -25,9 +25,14 @@
 #include <ktexteditor/editor.h>
 
 #include <KAboutData>
+#include <kcoreaddons_version.h> // for KAboutData::setDesktopFileName()
 #include <KLocalizedString>
 #include <KMessageBox>
 #include <KDBusService>
+#include <kcrash_version.h>
+#if KCrash_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#include <KCrash>
+#endif // KCrash >= 5.15
 
 #include <QCommandLineParser>
 #include <QApplication>
@@ -52,6 +57,13 @@ extern "C" Q_DECL_EXPORT int main(int argc, char **argv)
     app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
 
     /**
+     * Enable crash handling through KCrash.
+     */
+#if KCrash_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    KCrash::initialize();
+#endif
+
+    /**
      * Connect application with translation catalogs
      */
     KLocalizedString::setApplicationDomain("kwrite");
@@ -63,12 +75,19 @@ extern "C" Q_DECL_EXPORT int main(int argc, char **argv)
                          i18n("KWrite"),
                          QStringLiteral(KATE_VERSION),
                          i18n("KWrite - Text Editor"), KAboutLicense::LGPL_V2,
-                         i18n("(c) 2000-2015 The Kate Authors"), QString(), QStringLiteral("http://kate-editor.org"));
+                         i18n("(c) 2000-2016 The Kate Authors"), QString(), QStringLiteral("http://kate-editor.org"));
 
     /**
      * right dbus prefix == org.kde.
      */
     aboutData.setOrganizationDomain(QByteArray("kde.org"));
+
+    /**
+     * desktop file association to make application icon work (e.g. in Wayland window decoration)
+     */
+#if KCOREADDONS_VERSION >= QT_VERSION_CHECK(5, 16, 0)
+    aboutData.setDesktopFileName(QStringLiteral("org.kde.kwrite"));
+#endif
 
     aboutData.addAuthor(i18n("Christoph Cullmann"), i18n("Maintainer"), QStringLiteral("cullmann@kde.org"), QStringLiteral("http://www.cullmann.io"));
     aboutData.addAuthor(i18n("Anders Lund"), i18n("Core Developer"), QStringLiteral("anders@alweb.dk"), QStringLiteral("http://www.alweb.dk"));
@@ -136,15 +155,15 @@ extern "C" Q_DECL_EXPORT int main(int argc, char **argv)
     parser.addVersionOption();
 
     // -e/--encoding option
-    const QCommandLineOption useEncoding(QStringList() << QStringLiteral("e") << QStringLiteral("encoding"), i18n("Set encoding for the file to open."), QStringLiteral("encoding"));
+    const QCommandLineOption useEncoding(QStringList() << QStringLiteral("e") << QStringLiteral("encoding"), i18n("Set encoding for the file to open."), i18n("encoding"));
     parser.addOption(useEncoding);
 
     // -l/--line option
-    const QCommandLineOption gotoLine(QStringList() << QStringLiteral("l") << QStringLiteral("line"), i18n("Navigate to this line."), QStringLiteral("line"));
+    const QCommandLineOption gotoLine(QStringList() << QStringLiteral("l") << QStringLiteral("line"), i18n("Navigate to this line."), i18n("line"));
     parser.addOption(gotoLine);
 
     // -c/--column option
-    const QCommandLineOption gotoColumn(QStringList() << QStringLiteral("c") << QStringLiteral("column"), i18n("Navigate to this column."), QStringLiteral("column"));
+    const QCommandLineOption gotoColumn(QStringList() << QStringLiteral("c") << QStringLiteral("column"), i18n("Navigate to this column."), i18n("column"));
     parser.addOption(gotoColumn);
 
     // -i/--stdin option
@@ -156,7 +175,7 @@ extern "C" Q_DECL_EXPORT int main(int argc, char **argv)
     parser.addOption(tempfile);
 
     // urls to open
-    parser.addPositionalArgument(QStringLiteral("urls"), i18n("Documents to open."), QStringLiteral("[urls...]"));
+    parser.addPositionalArgument(QStringLiteral("urls"), i18n("Documents to open."), i18n("[urls...]"));
 
     /**
      * do the command line parsing
@@ -207,6 +226,10 @@ extern "C" Q_DECL_EXPORT int main(int argc, char **argv)
 
                 KTextEditor::Document *doc = t->view()->document();
                 if (doc) {
+                    // remember codec in document, e.g. to show the right one
+                    if (codec) {
+                        doc->setEncoding(QString::fromLatin1(codec->name()));
+                    }
                     doc->setText(text);
                 }
             }

@@ -121,12 +121,12 @@ KateBuildView::KateBuildView(KTextEditor::Plugin *plugin, KTextEditor::MainWindo
 
     a = actionCollection()->addAction(QStringLiteral("goto_next"));
     a->setText(i18n("Next Error"));
-    actionCollection()->setDefaultShortcut(a, Qt::CTRL+Qt::ALT+Qt::Key_Right);
+    actionCollection()->setDefaultShortcut(a, Qt::SHIFT+Qt::ALT+Qt::Key_Right);
     connect(a, SIGNAL(triggered(bool)), this, SLOT(slotNext()));
 
     a = actionCollection()->addAction(QStringLiteral("goto_prev"));
     a->setText(i18n("Previous Error"));
-    actionCollection()->setDefaultShortcut(a, Qt::CTRL+Qt::ALT+Qt::Key_Left);
+    actionCollection()->setDefaultShortcut(a, Qt::SHIFT+Qt::ALT+Qt::Key_Left);
     connect(a, SIGNAL(triggered(bool)), this, SLOT(slotPrev()));
 
 
@@ -370,7 +370,7 @@ void KateBuildView::slotErrorSelected(QTreeWidgetItem *item)
     const int column = item->data(2, Qt::UserRole).toInt();
 
     // open file (if needed, otherwise, this will activate only the right view...)
-    m_win->openUrl(QUrl::fromUserInput(filename));
+    m_win->openUrl(QUrl::fromLocalFile(filename));
 
     // any view active?
     if (!m_win->activeView()) {
@@ -783,7 +783,7 @@ void KateBuildView::slotReadReadyStdErr()
 void KateBuildView::processLine(const QString &line)
 {
     //qDebug() << line ;
-    
+
     //look for a filename
     int index = m_filenameDetector.indexIn(line);
 
@@ -828,9 +828,14 @@ void KateBuildView::processLine(const QString &line)
         filename = m_make_dir + QLatin1Char('/') + filename;
     }
 
+    // get canonical path, if possible, to avoid duplicated opened files
+    auto canonicalFilePath(QFileInfo(filename).canonicalFilePath());
+    if (!canonicalFilePath.isEmpty()) {
+        filename = canonicalFilePath;
+    }
+
     // Now we have the data we need show the error/warning
     addError(filename, line_n, QString(), msg);
-
 }
 
 

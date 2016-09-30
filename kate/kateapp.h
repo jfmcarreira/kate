@@ -208,9 +208,10 @@ public:
      * helper to handle stdin input
      * open a new document/view, fill it with the text given
      * @param text text to fill in the new doc/view
+     * @param encoding encoding to set for the document, if any
      * @return success
      */
-    bool openInput(const QString &text);
+    bool openInput(const QString &text, const QString &encoding);
 
     //
     // KTextEditor::Application interface, called by wrappers via invokeMethod
@@ -310,7 +311,15 @@ public Q_SLOTS:
         shutdownKate(activeKateMainWindow());
         return true;
     }
-    
+
+    /**
+     * A message is received from an external instance, if we use QtSingleApplication
+     *
+     * \p message is a serialized message (at the moment just the file list separated by ';')
+     * \p socket is the QLocalSocket used for the communication
+     */
+    void remoteMessageReceived(const QString &message, QObject *socket);
+
 protected:
     /**
      * Event filter for QApplication to handle mac os like file open

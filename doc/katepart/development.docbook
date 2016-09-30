@@ -232,6 +232,9 @@ the environment variable <envar>XDG_DATA_DIRS</envar> typically expands to
 <filename>/usr/share</filename>.
 </para>
 
+<para>On &Windows; these files are located in <filename>%USER%\AppData\Local\katepart5\syntax</filename>.
+<replaceable>%USER%</replaceable> usually expands to <filename>C:\\Users\\<replaceable>user</replaceable></filename>.</para>
+
 <variablelist>
 <title>Main sections of &kappname; Highlight Definition files</title>
 
@@ -253,11 +256,11 @@ Available attributes are:</term>
 <para><userinput>name</userinput> sets the name of the language. It appears in the menus and dialogs afterwards.</para>
 <para><userinput>section</userinput> specifies the category.</para>
 <para><userinput>extensions</userinput> defines file extensions, such as &quot;*.cpp;*.h&quot;</para>
+<para><userinput>version</userinput> specifies the current revision of the definition file in terms of an integer number. Whenever you change a highlighting definition file, make sure to increase this number.</para>
+<para><userinput>kateversion</userinput> specifies the latest supported &kappname; version.</para>
 
 <para>Optional attributes:</para>
 <para><userinput>mimetype</userinput> associates files &MIME; type.</para>
-<para><userinput>version</userinput> specifies the current version of the definition file.</para>
-<para><userinput>kateversion</userinput> specifies the latest supported &kappname; version.</para>
 <para><userinput>casesensitive</userinput> defines, whether the keywords are case sensitive or not.</para>
 <para><userinput>priority</userinput> is necessary if another highlight definition file uses the same extensions. The higher priority will win.</para>
 <para><userinput>author</userinput> contains the name of the author and his email-address.</para>
@@ -266,7 +269,7 @@ Available attributes are:</term>
 <para><userinput>hidden</userinput> defines whether the name should appear in &kappname;'s menus.</para>
 <para>So the next line may look like this:</para>
 <programlisting>
-&lt;language name=&quot;C++&quot; version=&quot;1.00&quot; kateversion=&quot;2.4&quot; section=&quot;Sources&quot; extensions=&quot;*.cpp;*.h&quot; /&gt;
+&lt;language name=&quot;C++&quot; version=&quot;1&quot; kateversion=&quot;2.4&quot; section=&quot;Sources&quot; extensions=&quot;*.cpp;*.h&quot; /&gt;
 </programlisting>
 </listitem>
 </varlistentry>
@@ -1052,6 +1055,8 @@ called &eg; <filename>javascript.js</filename> in the local home folder
 Therein, the environment variable <envar>XDG_DATA_HOME</envar> typically expands to
 either <filename>~/.local</filename> or <filename>~/.local/share</filename>.
 </para>
+<para>On &Windows; these files are located in <filename>%USER%\AppData\Local\katepart5\indentation</filename>.
+<replaceable>%USER%</replaceable> usually expands to <filename>C:\\Users\\<replaceable>user</replaceable></filename>.</para>
 
 <sect3 id="dev-scripting-indentation-header">
 <title>The Indentation Script Header</title>
@@ -1167,7 +1172,9 @@ with a different tab width.
 
 <para>
 A default &kde; installation ships &kappname; with several indenters. The
-corresponding JavaScript source code can be found in <filename>$<envar>XDG_DATA_DIRS</envar>/katepart5/script/indentation</filename>.
+corresponding JavaScript source code can be found in <filename>$<envar>XDG_DATA_DIRS</envar>/katepart5/script/indentation</filename>.</para>
+<para>On &Windows; these files are located in <filename>%USER%\AppData\Local\katepart5\indentation</filename>.
+<replaceable>%USER%</replaceable> usually expands to <filename>C:\\Users\\<replaceable>user</replaceable></filename>.
 </para>
 
 <para>
@@ -1202,7 +1209,9 @@ So as a first step, create a new <filename>*.js</filename> file called
 <filename>myutils.js</filename> in the local home folder
 <filename>$<envar>XDG_DATA_HOME</envar>/katepart5/script/commands</filename>.
 Therein, the environment variable <envar>XDG_DATA_HOME</envar> typically expands to
-either <filename>~/.local</filename> or <filename>~/.local/share</filename>.
+either <filename>~/.local</filename> or <filename>~/.local/share</filename>.</para>
+<para>On &Windows; these files are located in <filename>%USER%\AppData\Local\katepart5\commands</filename>.
+<replaceable>%USER%</replaceable> usually expands to <filename>C:\\Users\\<replaceable>user</replaceable></filename>.
 </para>
 
 <sect3 id="dev-scripting-command-line-header">
@@ -1371,6 +1380,9 @@ require ("myscriptnamehere.js");
 </programlisting>
 
 </para>
+
+<para>On &Windows; these files are located in <filename>%USER%\AppData\Local\katepart5\libraries</filename>.
+<replaceable>%USER%</replaceable> usually expands to <filename>C:\\Users\\<replaceable>user</replaceable></filename>.</para>
 
 <para>
 To extend existing prototypes like <classname>Cursor</classname> or

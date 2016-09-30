@@ -1,8 +1,6 @@
 <?xml version="1.0" ?>
 <!DOCTYPE book PUBLIC "-//KDE//DTD DocBook XML V4.5-Based Variant V1.1//EN"
 "dtd/kdedbx45.dtd" [
-  <!ENTITY imgpath "../katepart/">
-  <!ENTITY rcfile "katerc">
   <!ENTITY gdb "<acronym>GDB</acronym>">
   <!ENTITY configuring-chapter SYSTEM "configuring.docbook">
   <!ENTITY fundamentals-chapter SYSTEM "fundamentals.docbook">
@@ -44,13 +42,13 @@
 </copyright>
 <legalnotice>&FDLNotice;</legalnotice>
 
-<date>2016-04-21</date>
-<releaseinfo>Applications 16.04</releaseinfo>
+<date>2016-08-27</date>
+<releaseinfo>Applications 16.08</releaseinfo>
 
 <abstract>
 <para>&kate; is a programmer's text editor by &kde;.</para>
 
-<para>This handbook documents &kate; Version 16.04</para>
+<para>This handbook documents &kate; Version 16.08</para>
 </abstract>
 
 <keywordset>
@@ -278,7 +276,7 @@ to the &katepart; Handbook</ulink>.</para>
 <title>Installation</title>
 
 <para>To learn how to install &kate; and other &kde; applications on your system,
-see the <ulink url="help:fundamentals/install.html">Installing chapter of the
+see the <ulink url="help:/fundamentals/install.html">Installing chapter of the
 &kde; Fundamentals documentation</ulink>.</para>
 
 </appendix>

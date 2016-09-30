@@ -516,9 +516,23 @@ void KateMainWindow::slotEditToolbars()
     dlg.exec();
 }
 
+void KateMainWindow::reloadXmlGui()
+{
+    for (KTextEditor::Document* doc : KateApp::self()->documentManager()->documentList()) {
+        doc->reloadXML();
+        for (KTextEditor::View* view : doc->views()) {
+            view->reloadXML();
+        }
+    }
+}
+
 void KateMainWindow::slotNewToolbarConfig()
 {
     applyMainWindowSettings(KConfigGroup(KSharedConfig::openConfig(), "MainWindow"));
+
+    // we neeed to relod all View's XML Gui from disk to ensure toolbar
+    // changes are applied to all views.
+    reloadXmlGui();
 }
 
 void KateMainWindow::slotFileQuit()
@@ -717,10 +731,11 @@ void KateMainWindow::slotListRecursiveEntries(KIO::Job *job, const KIO::UDSEntry
 {
     const QUrl dir = static_cast<KIO::SimpleJob *>(job)->url();
     foreach(const KIO::UDSEntry & entry, list) {
-        QUrl currentUrl = dir.resolved(QUrl(entry.stringValue(KIO::UDSEntry::UDS_NAME)));
-
         if (!entry.isDir()) {
-            m_viewManager->openUrl(currentUrl);
+            QUrl url(dir);
+            url = url.adjusted(QUrl::StripTrailingSlash);
+            url.setPath(url.path() + QLatin1Char('/') + entry.stringValue(KIO::UDSEntry::UDS_NAME));
+            m_viewManager->openUrl(url);
         }
     }
 }
@@ -742,16 +757,8 @@ void KateMainWindow::editKeys()
     }
     dlg.configure();
 
-    QList<KTextEditor::Document *>  l = KateApp::self()->documentManager()->documentList();
-    for (int i = 0; i < l.count(); i++) {
-//     qCDebug(LOG_KATE)<<"reloading Keysettings for document "<<i;
-        l.at(i)->reloadXML();
-        QList<KTextEditor::View *> l1 = l.at(i)->views();
-        for (int i1 = 0; i1 < l1.count(); i1++) {
-            l1.at(i1)->reloadXML();
-//       qCDebug(LOG_KATE)<<"reloading Keysettings for view "<<i<<"/"<<i1;
-        }
-    }
+    // reloadXML gui clients, to ensure all clients are up-to-date
+    reloadXmlGui();
 }
 
 void KateMainWindow::openUrl(const QString &name)

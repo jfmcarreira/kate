@@ -167,14 +167,14 @@ void KatePluginSearchView::nextFocus(QWidget *currentWidget, bool *found, bool n
 
     // we use the object names here because there can be multiple replaceButtons (on multiple result tabs)
     if (next) {
-        if (currentWidget->objectName() == QStringLiteral("tree")) {
+        if (currentWidget->objectName() == QStringLiteral("tree") || currentWidget == m_ui.binaryCheckBox) {
             m_ui.newTabButton->setFocus();
             *found = true;
             return;
         }
         if (currentWidget == m_ui.displayOptions) {
             if (m_ui.displayOptions->isChecked()) {
-                m_ui.newTabButton->setFocus();
+                m_ui.folderRequester->setFocus();
                 *found = true;
                 return;
             }
@@ -192,7 +192,7 @@ void KatePluginSearchView::nextFocus(QWidget *currentWidget, bool *found, bool n
     else {
         if (currentWidget == m_ui.newTabButton) {
             if (m_ui.displayOptions->isChecked()) {
-                m_ui.displayOptions->setFocus();
+                m_ui.binaryCheckBox->setFocus();
             }
             else {
                 Results *res = qobject_cast<Results *>(m_ui.resultTabWidget->currentWidget());
@@ -261,7 +261,11 @@ m_mainWindow (mainWin)
 
     m_ui.displayOptions->setIcon(QIcon::fromTheme(QStringLiteral("games-config-options")));
     m_ui.searchButton->setIcon(QIcon::fromTheme(QStringLiteral("edit-find")));
+    m_ui.nextButton->setIcon(QIcon::fromTheme(QStringLiteral("go-down-search")));
     m_ui.stopButton->setIcon(QIcon::fromTheme(QStringLiteral("process-stop")));
+    m_ui.matchCase->setIcon(QIcon::fromTheme(QStringLiteral("format-text-superscript")));
+    m_ui.useRegExp->setIcon(QIcon::fromTheme(QStringLiteral("code-context")));
+    m_ui.expandResults->setIcon(QIcon::fromTheme(QStringLiteral("view-list-tree")));
     m_ui.searchPlaceCombo->setItemIcon(CurrentFile, QIcon::fromTheme(QStringLiteral("text-plain")));
     m_ui.searchPlaceCombo->setItemIcon(OpenFiles, QIcon::fromTheme(QStringLiteral("text-plain")));
     m_ui.searchPlaceCombo->setItemIcon(Folder, QIcon::fromTheme(QStringLiteral("folder")));
@@ -293,8 +297,8 @@ m_mainWindow (mainWin)
     connect(m_ui.currentFolderButton, SIGNAL(clicked()), this, SLOT(setCurrentFolder()));
 
     connect(m_ui.searchCombo,      SIGNAL(editTextChanged(QString)), &m_changeTimer, SLOT(start()));
-    connect(m_ui.matchCase,        SIGNAL(stateChanged(int)), &m_changeTimer, SLOT(start()));
-    connect(m_ui.useRegExp,        SIGNAL(stateChanged(int)), &m_changeTimer, SLOT(start()));
+    connect(m_ui.matchCase,        SIGNAL(toggled(bool)), &m_changeTimer, SLOT(start()));
+    connect(m_ui.useRegExp,        SIGNAL(toggled(bool)), &m_changeTimer, SLOT(start()));
     m_changeTimer.setInterval(300);
     m_changeTimer.setSingleShot(true);
     connect(&m_changeTimer, SIGNAL(timeout()), this, SLOT(startSearchWhileTyping()));
@@ -329,6 +333,7 @@ m_mainWindow (mainWin)
     connect(&m_searchOpenFiles, SIGNAL(searching(QString)), this, SLOT(searching(QString)));
 
     connect(&m_folderFilesList, SIGNAL(finished()),  this, SLOT(folderFileListChanged()));
+    connect(&m_folderFilesList, SIGNAL(searching(QString)),  this, SLOT(searching(QString)));
 
     connect(&m_searchDiskFiles, SIGNAL(matchFound(QString,QString,int,int,QString,int)),
             this,                 SLOT(matchFound(QString,QString,int,int,QString,int)));
@@ -403,7 +408,7 @@ KatePluginSearchView::~KatePluginSearchView()
 void KatePluginSearchView::navigateFolderUp()
 {
     // navigate one folder up
-    m_ui.folderRequester->setUrl(localFileDirUp (m_ui.folderRequester->url()));
+    m_ui.folderRequester->setUrl(localFileDirUp(m_ui.folderRequester->url()));
 }
 
 void KatePluginSearchView::setCurrentFolder()
@@ -414,8 +419,9 @@ void KatePluginSearchView::setCurrentFolder()
     KTextEditor::View* editView = m_mainWindow->activeView();
     if (editView && editView->document()) {
         // upUrl as we want the folder not the file
-        m_ui.folderRequester->setUrl(localFileDirUp (editView->document()->url()));
+        m_ui.folderRequester->setUrl(localFileDirUp(editView->document()->url()));
     }
+    m_ui.displayOptions->setChecked(true);
 }
 
 void KatePluginSearchView::openSearchView()
@@ -427,7 +433,9 @@ void KatePluginSearchView::openSearchView()
         m_mainWindow->showToolView(m_toolView);
     }
     m_ui.searchCombo->setFocus(Qt::OtherFocusReason);
-    m_ui.displayOptions->setChecked(true);
+    if (m_ui.searchPlaceCombo->currentIndex() == Folder) {
+        m_ui.displayOptions->setChecked(true);
+    }
 
     KTextEditor::View* editView = m_mainWindow->activeView();
     if (editView && editView->document()) {
@@ -589,10 +597,12 @@ void KatePluginSearchView::folderFileListChanged()
 
 void KatePluginSearchView::searchPlaceChanged()
 {
-    m_ui.displayOptions->setChecked(true);
 
     int searchPlace = m_ui.searchPlaceCombo->currentIndex();
     const bool inFolder = (searchPlace == Folder);
+    if (inFolder) {
+        m_ui.displayOptions->setChecked(true);
+    }
 
     m_ui.filterCombo->setEnabled(searchPlace >= Folder);
     m_ui.excludeCombo->setEnabled(searchPlace >= Folder);
@@ -629,7 +639,7 @@ QTreeWidgetItem * KatePluginSearchView::rootFileItem(const QString &url, const Q
     }
 
     QUrl fullUrl = QUrl::fromUserInput(url);
-    QString path = fullUrl.isLocalFile() ? localFileDirUp (fullUrl).path() : fullUrl.url();
+    QString path = fullUrl.isLocalFile() ? localFileDirUp(fullUrl).path() : fullUrl.url();
     if (!path.isEmpty() && !path.endsWith(QLatin1Char('/'))) {
         path += QLatin1Char('/');
     }
@@ -890,12 +900,13 @@ void KatePluginSearchView::startSearch()
     m_ui.displayOptions->setDisabled(true);
     m_ui.replaceCheckedBtn->setDisabled(true);
     m_ui.replaceButton->setDisabled(true);
-    m_ui.nextAndStop->setCurrentIndex(1);
+    m_ui.stopAndReplace->setCurrentIndex(1);
     m_ui.replaceCombo->setDisabled(true);
 
 
     clearMarks();
     m_curResults->tree->clear();
+    m_curResults->tree->setCurrentItem(nullptr);
     m_curResults->matches = 0;
 
     m_ui.resultTabWidget->setTabText(m_ui.resultTabWidget->currentIndex(),
@@ -1008,6 +1019,7 @@ void KatePluginSearchView::startSearchWhileTyping()
 
     clearMarks();
     m_curResults->tree->clear();
+    m_curResults->tree->setCurrentItem(nullptr);
     m_curResults->matches = 0;
 
     QRegularExpression::PatternOptions patternOptions = (m_ui.matchCase->isChecked() ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
@@ -1060,7 +1072,7 @@ void KatePluginSearchView::searchDone()
     m_ui.newTabButton->setDisabled(false);
     m_ui.searchCombo->setDisabled(false);
     m_ui.searchButton->setDisabled(false);
-    m_ui.nextAndStop->setCurrentIndex(0);
+    m_ui.stopAndReplace->setCurrentIndex(0);
     m_ui.displayOptions->setDisabled(false);
     m_ui.replaceCombo->setDisabled(false);
 
@@ -1088,9 +1100,6 @@ void KatePluginSearchView::searchDone()
             m_curResults->tree->collapseItem(root->child(i));
         }
     }
-
-    m_curResults->tree->setCurrentItem(root);
-    m_curResults->tree->setFocus(Qt::OtherFocusReason);
 
     if (root) {
         switch (m_ui.searchPlaceCombo->currentIndex())
@@ -1339,7 +1348,7 @@ void KatePluginSearchView::replaceChecked()
         return;
     }
 
-    m_ui.nextAndStop->setCurrentIndex(1);
+    m_ui.stopAndReplace->setCurrentIndex(1);
     m_ui.displayOptions->setChecked(false);
 
     m_curResults->replace = m_ui.replaceCombo->currentText();
@@ -1351,7 +1360,7 @@ void KatePluginSearchView::replaceChecked()
 
 void KatePluginSearchView::replaceDone()
 {
-    m_ui.nextAndStop->setCurrentIndex(0);
+    m_ui.stopAndReplace->setCurrentIndex(0);
     m_ui.replaceCombo->setDisabled(false);
 }
 
@@ -1461,28 +1470,80 @@ void KatePluginSearchView::itemSelected(QTreeWidgetItem *item)
 
 void KatePluginSearchView::goToNextMatch()
 {
+    bool wrapFromFirst = false;
     Results *res = qobject_cast<Results *>(m_ui.resultTabWidget->currentWidget());
     if (!res) {
         return;
     }
     QTreeWidgetItem *curr = res->tree->currentItem();
     if (!curr) {
+        // no item has been visited -> jump to the closest match after current cursor position
+        // check if current file is in the file
         curr = res->tree->topLevelItem(0);
+        while (curr && curr->data(0, ReplaceMatches::FileUrlRole).toString() != m_mainWindow->activeView()->document()->url().toString()) {
+            curr = res->tree->itemBelow(curr);
+        }
+        // now we are either in this file or !curr
+        if (curr) {
+            QTreeWidgetItem *fileBefore = curr;
+            res->tree->expandItem(curr);
+
+            int lineNr = 0;
+            int columnNr = 0;
+            if (m_mainWindow->activeView()->cursorPosition().isValid()) {
+                lineNr = m_mainWindow->activeView()->cursorPosition().line();
+                columnNr = m_mainWindow->activeView()->cursorPosition().column();
+            }
+
+            if (!curr->data(0, ReplaceMatches::ColumnRole).isValid()) {
+                curr = res->tree->itemBelow(curr);
+            };
+
+            while (curr && curr->data(0, ReplaceMatches::LineRole).toInt() <= lineNr &&
+                curr->data(0, ReplaceMatches::FileUrlRole).toString() == m_mainWindow->activeView()->document()->url().toString())
+            {
+                if (curr->data(0, ReplaceMatches::LineRole).toInt() == lineNr &&
+                    curr->data(0, ReplaceMatches::ColumnRole).toInt() > columnNr)
+                {
+                    break;
+                }
+                fileBefore = curr;
+                curr = res->tree->itemBelow(curr);
+            }
+            curr = fileBefore;
+        }
+
+        if (!curr) {
+            curr = res->tree->topLevelItem(0);
+        }
     }
     if (!curr) return;
 
     if (!curr->data(0, ReplaceMatches::ColumnRole).toString().isEmpty()) {
         curr = res->tree->itemBelow(curr);
         if (!curr) {
+            wrapFromFirst = true;
             curr = res->tree->topLevelItem(0);
         }
     }
 
     itemSelected(curr);
+
+    if (wrapFromFirst) {
+        delete m_infoMessage;
+        const QString msg = i18n("Continuing from first match");
+        m_infoMessage = new KTextEditor::Message(msg, KTextEditor::Message::Information);
+        m_infoMessage->setPosition(KTextEditor::Message::TopInView);
+        m_infoMessage->setAutoHide(2000);
+        m_infoMessage->setAutoHideMode(KTextEditor::Message::Immediate);
+        m_infoMessage->setView(m_mainWindow->activeView());
+        m_mainWindow->activeView()->document()->postMessage(m_infoMessage);
+    }
 }
 
 void KatePluginSearchView::goToPreviousMatch()
 {
+    bool fromLast = false;
     Results *res = qobject_cast<Results *>(m_ui.resultTabWidget->currentWidget());
     if (!res) {
         return;
@@ -1492,8 +1553,55 @@ void KatePluginSearchView::goToPreviousMatch()
     }
     QTreeWidgetItem *curr = res->tree->currentItem();
 
+    if (!curr) {
+        // no item has been visited -> jump to the closest match before current cursor position
+        // check if current file is in the file
+        curr = res->tree->topLevelItem(0);
+        while (curr && curr->data(0, ReplaceMatches::FileUrlRole).toString() != m_mainWindow->activeView()->document()->url().toString()) {
+            curr = res->tree->itemBelow(curr);
+        }
+        // now we are either in this file or !curr
+        if (curr) {
+            res->tree->expandItem(curr);
+
+            int lineNr = 0;
+            int columnNr = 0;
+            if (m_mainWindow->activeView()->cursorPosition().isValid()) {
+                lineNr = m_mainWindow->activeView()->cursorPosition().line();
+                columnNr = m_mainWindow->activeView()->cursorPosition().column()-1;
+            }
+
+            if (!curr->data(0, ReplaceMatches::ColumnRole).isValid()) {
+                curr = res->tree->itemBelow(curr);
+            };
+
+            while (curr && curr->data(0, ReplaceMatches::LineRole).toInt() <= lineNr &&
+                curr->data(0, ReplaceMatches::FileUrlRole).toString() == m_mainWindow->activeView()->document()->url().toString())
+            {
+                if (curr->data(0, ReplaceMatches::LineRole).toInt() == lineNr &&
+                    curr->data(0, ReplaceMatches::ColumnRole).toInt() > columnNr)
+                {
+                    break;
+                }
+                curr = res->tree->itemBelow(curr);
+            }
+        }
+    }
+
+    QTreeWidgetItem *startChild = curr;
+
     // go to the item above. (curr == null is not a problem)
     curr = res->tree->itemAbove(curr);
+
+    // expand the items above if needed
+    if (curr && curr->data(0, ReplaceMatches::ColumnRole).toString().isEmpty()) {
+        res->tree->expandItem(curr);  // probably this file item
+        curr = res->tree->itemAbove(curr);
+        if (curr && curr->data(0, ReplaceMatches::ColumnRole).toString().isEmpty()) {
+            res->tree->expandItem(curr);  // probably file above if this is reached
+        }
+        curr = res->tree->itemAbove(startChild);
+    }
 
     // skip file name items and the root item
     while (curr && curr->data(0, ReplaceMatches::ColumnRole).toString().isEmpty()) {
@@ -1511,9 +1619,21 @@ void KatePluginSearchView::goToPreviousMatch()
         // select the last match of the "root item"
         if (!root || (root->childCount() < 1)) return;
         curr = root->child(root->childCount()-1);
+
+        fromLast = true;
     }
 
     itemSelected(curr);
+    if (fromLast) {
+        delete m_infoMessage;
+        const QString msg = i18n("Continuing from last match");
+        m_infoMessage = new KTextEditor::Message(msg, KTextEditor::Message::Information);
+        m_infoMessage->setPosition(KTextEditor::Message::BottomInView);
+        m_infoMessage->setAutoHide(2000);
+        m_infoMessage->setAutoHideMode(KTextEditor::Message::Immediate);
+        m_infoMessage->setView(m_mainWindow->activeView());
+        m_mainWindow->activeView()->document()->postMessage(m_infoMessage);
+    }
 }
 
 void KatePluginSearchView::readSessionConfig(const KConfigGroup &cg)
@@ -1552,6 +1672,7 @@ void KatePluginSearchView::readSessionConfig(const KConfigGroup &cg)
     m_ui.excludeCombo->clear();
     m_ui.excludeCombo->addItems(cg.readEntry("ExcludeFilters", QStringList()));
     m_ui.excludeCombo->setCurrentIndex(cg.readEntry("CurrentExcludeFilter", 0));
+    m_ui.displayOptions->setChecked(searchPlaceIndex == Folder);
 }
 
 void KatePluginSearchView::writeSessionConfig(KConfigGroup &cg)
@@ -1793,7 +1914,7 @@ void KatePluginSearchView::slotProjectFileNameChanged ()
     if (!projectFileName.isEmpty()) {
         if (m_ui.searchPlaceCombo->count() <= Project) {
             // add "in Project"
-            m_ui.searchPlaceCombo->addItem (QIcon::fromTheme(QStringLiteral("project-open")), i18n("Current Project"));
+            m_ui.searchPlaceCombo->addItem (QIcon::fromTheme(QStringLiteral("project-open")), i18n("In Current Project"));
             if (m_switchToProjectModeWhenAvailable) {
                 // switch to search "in Project"
                 m_switchToProjectModeWhenAvailable = false;
@@ -1801,7 +1922,7 @@ void KatePluginSearchView::slotProjectFileNameChanged ()
             }
 
             // add "in Open Projects"
-            m_ui.searchPlaceCombo->addItem(QIcon::fromTheme(QStringLiteral("project-open")), i18n("All Open Projects"));
+            m_ui.searchPlaceCombo->addItem(QIcon::fromTheme(QStringLiteral("project-open")), i18n("In All Open Projects"));
         }
     }
 

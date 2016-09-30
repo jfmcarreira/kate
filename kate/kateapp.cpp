@@ -200,7 +200,7 @@ bool KateApp::startupKate()
             text.append(line + QLatin1Char('\n'));
         } while (!line.isNull());
 
-        openInput(text);
+        openInput(text, codec_name);
     } else if (doc) {
         activeKateMainWindow()->viewManager()->activateView(doc);
     }
@@ -310,9 +310,9 @@ bool KateApp::setCursor(int line, int column)
     return true;
 }
 
-bool KateApp::openInput(const QString &text)
+bool KateApp::openInput(const QString &text, const QString &encoding)
 {
-    activeKateMainWindow()->viewManager()->openUrl(QUrl(), QString(), true);
+    activeKateMainWindow()->viewManager()->openUrl(QUrl(), encoding, true);
 
     if (!activeKateMainWindow()->viewManager()->activeView()) {
         return false;
@@ -409,9 +409,45 @@ bool KateApp::eventFilter(QObject *obj, QEvent *event)
         }
         return true;
     }
-    
+
     /**
      * else: pass over to default implementation
      */
     return QObject::eventFilter(obj, event);
+}
+
+void KateApp::remoteMessageReceived(const QString &message, QObject *)
+{
+    /**
+     * try to parse message, ignore if no object
+     */
+    const QJsonDocument jsonMessage = QJsonDocument::fromJson(message.toUtf8());
+    if (!jsonMessage.isObject())
+        return;
+
+    /**
+     * open all passed urls
+     */
+    const QJsonArray urls = jsonMessage.object().value(QLatin1String("urls")).toArray();
+    Q_FOREACH(QJsonValue urlObject, urls) {
+        /**
+         * get url meta data
+         */
+        const QUrl url = urlObject.toObject().value(QLatin1String("url")).toVariant().toUrl();
+        const int line = urlObject.toObject().value(QLatin1String("line")).toVariant().toInt();
+        const int column = urlObject.toObject().value(QLatin1String("column")).toVariant().toInt();
+
+        /**
+         * open file + set line/column if requested
+         */
+        openUrl(url, QString(), false);
+        if (line >= 0 && column >= 0) {
+            setCursor(line, column);
+        }
+
+    }
+    if (activeKateMainWindow()) {
+        activeKateMainWindow()->activateWindow();
+        activeKateMainWindow()->raise();
+    }
 }

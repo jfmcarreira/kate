@@ -72,16 +72,15 @@ void KatePluginManager::setupPluginList()
     defaultPlugins.insert (QLatin1String("katesearchplugin"));
     m_pluginList.clear();
     QVectorIterator<KPluginMetaData> i(plugins);
-    i.toBack();
     QSet<QString> unique;
-    while (i.hasPrevious()) {
+    while (i.hasNext()) {
         KatePluginInfo info;
-        info.metaData = i.previous();
-        
+        info.metaData = i.next();
+
         // only load plugins once, even if found multiple times!
         if (unique.contains(info.saveName()))
             continue;
-        
+
         info.defaultLoad = defaultPlugins.contains(info.saveName());
         info.load = false;
         info.plugin = nullptr;
@@ -120,7 +119,11 @@ void KatePluginManager::loadConfig(KConfig *config)
      */
     for (KatePluginList::iterator it = m_pluginList.begin(); it != m_pluginList.end(); ++it) {
         if (it->load) {
+            /**
+             * load plugin + trigger update of GUI for already existing main windows
+             */
             loadPlugin(&(*it));
+            enablePluginGUI(&(*it));
 
             // restore config
             if (auto interface = qobject_cast<KTextEditor::SessionConfigInterface *> (it->plugin)) {

@@ -24,10 +24,15 @@
 #include "katewaiter.h"
 
 #include <KAboutData>
+#include <kcoreaddons_version.h> // for KAboutData::setDesktopFileName()
 #include <KLocalizedString>
 #include <KWindowSystem>
 #include <KStartupInfo>
 #include <kdbusservice.h>
+#include <kcrash_version.h>
+#if KCrash_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#include <KCrash>
+#endif // KCrash >= 5.15
 
 #include <QByteArray>
 #include <QCommandLineParser>
@@ -42,6 +47,11 @@
 
 #include "../urlinfo.h"
 
+#ifdef USE_QT_SINGLE_APP
+#include "qtsingleapplication/qtsingleapplication.h"
+#endif
+
+
 int main(int argc, char **argv)
 {
     /**
@@ -51,15 +61,29 @@ int main(int argc, char **argv)
 
     /**
      * Create application first
+     */
+#ifdef USE_QT_SINGLE_APP
+    SharedTools::QtSingleApplication app(QStringLiteral("kate"),argc, argv);
+#else
+    QApplication app(argc, argv);
+#endif
+
+    /**
      * Enforce application name even if the executable is renamed
      */
-    QApplication app(argc, argv);
     app.setApplicationName(QStringLiteral("kate"));
 
     /**
      * enable high dpi support
      */
     app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
+
+    /**
+     * Enable crash handling through KCrash.
+     */
+#if KCrash_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    KCrash::initialize();
+#endif
 
     /**
      * Connect application with translation catalogs
@@ -78,6 +102,13 @@ int main(int argc, char **argv)
      */
     aboutData.setOrganizationDomain("kde.org");
 
+    /**
+     * desktop file association to make application icon work (e.g. in Wayland window decoration)
+     */
+#if KCOREADDONS_VERSION >= QT_VERSION_CHECK(5, 16, 0)
+    aboutData.setDesktopFileName(QStringLiteral("org.kde.kate"));
+#endif
+
     aboutData.addAuthor(i18n("Christoph Cullmann"), i18n("Maintainer"), QStringLiteral("cullmann@kde.org"), QStringLiteral("http://www.cullmann.io"));
     aboutData.addAuthor(i18n("Anders Lund"), i18n("Core Developer"), QStringLiteral("anders@alweb.dk"), QStringLiteral("http://www.alweb.dk"));
     aboutData.addAuthor(i18n("Joseph Wenninger"), i18n("Core Developer"), QStringLiteral("jowenn@kde.org"), QStringLiteral("http://stud3.tuwien.ac.at/~e9925371"));
@@ -85,6 +116,7 @@ int main(int argc, char **argv)
     aboutData.addAuthor(i18n("Dominik Haumann"), i18n("Developer & Highlight wizard"), QStringLiteral("dhdev@gmx.de"));
     aboutData.addAuthor(i18n("Kåre Särs"), i18n("Developer"), QStringLiteral("kare.sars@iki.fi"));
     aboutData.addAuthor(i18n("Alexander Neundorf"), i18n("Developer"), QStringLiteral("neundorf@kde.org"));
+    aboutData.addAuthor(i18n("Sven Brauch"), i18n("Developer"), QStringLiteral("mail@svenbrauch.de"));
     aboutData.addAuthor(i18n("Waldo Bastian"), i18n("The cool buffersystem"), QStringLiteral("bastian@kde.org"));
     aboutData.addAuthor(i18n("Charles Samuels"), i18n("The Editing Commands"), QStringLiteral("charles@kde.org"));
     aboutData.addAuthor(i18n("Matt Newell"), i18n("Testing, ..."), QStringLiteral("newellm@proaxis.com"));
@@ -147,7 +179,7 @@ int main(int argc, char **argv)
     parser.addVersionOption();
 
     // -s/--start session option
-    const QCommandLineOption startSessionOption(QStringList() << QStringLiteral("s") << QStringLiteral("start"), i18n("Start Kate with a given session."), QStringLiteral("session"));
+    const QCommandLineOption startSessionOption(QStringList() << QStringLiteral("s") << QStringLiteral("start"), i18n("Start Kate with a given session."), i18n("session"));
     parser.addOption(startSessionOption);
 
     // --startanon session option
@@ -163,19 +195,19 @@ int main(int argc, char **argv)
     parser.addOption(startBlockingOption);
 
     // -p/--pid option
-    const QCommandLineOption usePidOption(QStringList() << QStringLiteral("p") << QStringLiteral("pid"), i18n("Only try to reuse kate instance with this pid (is ignored if start is used and another kate instance already has the given session opened)."), QStringLiteral("pid"));
+    const QCommandLineOption usePidOption(QStringList() << QStringLiteral("p") << QStringLiteral("pid"), i18n("Only try to reuse kate instance with this pid (is ignored if start is used and another kate instance already has the given session opened)."), i18n("pid"));
     parser.addOption(usePidOption);
 
     // -e/--encoding option
-    const QCommandLineOption useEncodingOption(QStringList() << QStringLiteral("e") << QStringLiteral("encoding"), i18n("Set encoding for the file to open."), QStringLiteral("encoding"));
+    const QCommandLineOption useEncodingOption(QStringList() << QStringLiteral("e") << QStringLiteral("encoding"), i18n("Set encoding for the file to open."), i18n("encoding"));
     parser.addOption(useEncodingOption);
 
     // -l/--line option
-    const QCommandLineOption gotoLineOption(QStringList() << QStringLiteral("l") << QStringLiteral("line"), i18n("Navigate to this line."), QStringLiteral("line"));
+    const QCommandLineOption gotoLineOption(QStringList() << QStringLiteral("l") << QStringLiteral("line"), i18n("Navigate to this line."), i18n("line"));
     parser.addOption(gotoLineOption);
 
     // -c/--column option
-    const QCommandLineOption gotoColumnOption(QStringList() << QStringLiteral("c") << QStringLiteral("column"), i18n("Navigate to this column."), QStringLiteral("column"));
+    const QCommandLineOption gotoColumnOption(QStringList() << QStringLiteral("c") << QStringLiteral("column"), i18n("Navigate to this column."), i18n("column"));
     parser.addOption(gotoColumnOption);
 
     // -i/--stdin option
@@ -187,7 +219,7 @@ int main(int argc, char **argv)
     parser.addOption(tempfileOption);
 
     // urls to open
-    parser.addPositionalArgument(QStringLiteral("urls"), i18n("Documents to open."), QStringLiteral("[urls...]"));
+    parser.addPositionalArgument(QStringLiteral("urls"), i18n("Documents to open."), i18n("[urls...]"));
 
     /**
      * do the command line parsing
@@ -200,9 +232,41 @@ int main(int argc, char **argv)
     aboutData.processCommandLine(&parser);
 
     /**
-     * use dbus, if available
+     * remember the urls we shall open
+     */
+    const QStringList urls = parser.positionalArguments();
+
+    /**
+     * compute if we shall start a new instance or reuse
+     * an old one
+     * this will later be updated once more after detecting some
+     * things about already running kate's, like their sessions
+     */
+    bool force_new = parser.isSet(startNewInstanceOption);
+    if (!force_new) {
+        if (!(
+                    parser.isSet(startSessionOption) ||
+                    parser.isSet(startNewInstanceOption) ||
+                    parser.isSet(usePidOption) ||
+                    parser.isSet(useEncodingOption) ||
+                    parser.isSet(gotoLineOption) ||
+                    parser.isSet(gotoColumnOption) ||
+                    parser.isSet(readStdInOption)
+                ) && (urls.isEmpty())) {
+            force_new = true;
+        }
+    }
+
+    /**
+     * only block, if files to open there....
+     */
+    const bool needToBlock = parser.isSet(startBlockingOption) && !urls.isEmpty();
+
+    /**
+     * use dbus, if available for linux and co.
      * allows for resuse of running Kate instances
      */
+#ifndef USE_QT_SINGLE_APP
     if (QDBusConnectionInterface * const sessionBusInterface = QDBusConnection::sessionBus().interface()) {
         /**
          * try to get the current running kate instances
@@ -217,24 +281,6 @@ int main(int argc, char **argv)
             kateServices << (*it)->serviceName;
         }
         QString serviceName;
-
-        const QStringList urls = parser.positionalArguments();
-
-        bool force_new = parser.isSet(startNewInstanceOption);
-
-        if (!force_new) {
-            if (!(
-                        parser.isSet(startSessionOption) ||
-                        parser.isSet(startNewInstanceOption) ||
-                        parser.isSet(usePidOption) ||
-                        parser.isSet(useEncodingOption) ||
-                        parser.isSet(gotoLineOption) ||
-                        parser.isSet(gotoColumnOption) ||
-                        parser.isSet(readStdInOption)
-                    ) && (urls.isEmpty())) {
-                force_new = true;
-            }
-        }
 
         QString start_session;
         bool session_already_opened = false;
@@ -329,9 +375,6 @@ int main(int argc, char **argv)
 
             bool tempfileSet = parser.isSet(tempfileOption);
 
-            // only block, if files to open there....
-            bool needToBlock = parser.isSet(startBlockingOption) && !urls.isEmpty();
-
             QStringList tokens;
 
             // open given files...
@@ -388,6 +431,7 @@ int main(int argc, char **argv)
 
                 QList<QVariant> dbusargs;
                 dbusargs.append(text);
+                dbusargs.append(codec ? QString::fromLatin1(codec->name()) : QString());
                 m.setArguments(dbusargs);
 
                 QDBusConnection::sessionBus().call(m);
@@ -444,6 +488,56 @@ int main(int argc, char **argv)
     }
 
     /**
+     * for mac & windows: use QtSingleApplication
+     */
+#else
+    /**
+     * only try to reuse existing kate instances if not already forbidden by arguments
+     */
+    if (!force_new) {
+        /**
+         * any instance running we can use?
+         * later we could do here pid checks and stuff
+         */
+        bool instanceFound = app.isRunning();
+
+        /**
+         * if instance was found, send over all urls to be opened
+         */
+        if (instanceFound) {
+            /**
+             * tell single application to block if needed
+             */
+            app.setBlock(needToBlock);
+
+            /**
+             * construct one big message with all urls to open
+             * later we will add additional data to this
+             */
+            QVariantMap message;
+            QVariantList messageUrls;
+            foreach(const QString & url, urls) {
+                /**
+                 * get url info and pack them into the message as extra element in urls list
+                 */
+                UrlInfo info(url);
+                QVariantMap urlMessagePart;
+                urlMessagePart[QLatin1String("url")] = info.url;
+                urlMessagePart[QLatin1String("line")] = info.cursor.line();
+                urlMessagePart[QLatin1String("column")] = info.cursor.column();
+                messageUrls.append(urlMessagePart);
+            }
+            message[QLatin1String("urls")] = messageUrls;
+
+            /**
+             * try to send message, return success
+             */
+            return !app.sendMessage(QString::fromUtf8(QJsonDocument::fromVariant(QVariant(message)).toJson()));
+        }
+    }
+#endif // USE_QT_SINGLE_APP
+
+    /**
      * if we arrive here, we need to start a new kate instance!
      */
 
@@ -463,10 +557,19 @@ int main(int argc, char **argv)
         return 0;
     }
 
+#ifndef USE_QT_SINGLE_APP
     /**
      * finally register this kate instance for dbus, don't die if no dbus is around!
      */
     const KDBusService dbusService(KDBusService::Multiple | KDBusService::NoExitOnFailure);
+#else
+    /**
+     * else: connect the single application notifications
+     */
+    QObject::connect(&app, &SharedTools::QtSingleApplication::messageReceived,
+                     &kateApp, &KateApp::remoteMessageReceived);
+#endif
+
 
     /**
      * start main event loop for our application

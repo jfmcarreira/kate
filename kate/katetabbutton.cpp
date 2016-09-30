@@ -125,8 +125,8 @@ void KateTabButton::paintEvent(QPaintEvent *ev)
 
     QColor barColor(palette().color(QPalette::Highlight));
 
-    // read from the parent widget (=KateTabBar) the isActiveViewSpace property
-    if (isActiveViewSpace()) {
+    // read from the parent widget (=KateTabBar) the isActiveTabBar property
+    if (!isActiveTabBar()) {
         // if inactive, convert color to gray value
         const int g = qGray(barColor.rgb());
         barColor = QColor(g, g, g);
@@ -188,6 +188,8 @@ void KateTabButton::mousePressEvent(QMouseEvent *ev)
 
         // notify that this button was activated
         emit activated(this);
+    } else if (ev->button() == Qt::MiddleButton) {
+        emit closeRequest(this);
     } else {
         ev->ignore();
     }
@@ -242,12 +244,12 @@ void KateTabButton::moveEvent(QMoveEvent *event)
     QAbstractButton::moveEvent(event);
 }
 
-bool KateTabButton::isActiveViewSpace() const
+bool KateTabButton::isActiveTabBar() const
 {
     Q_ASSERT(parentWidget());
 
-    // read from the parent widget (=KateTabBar) the isActiveViewSpace property
-    return ! parentWidget()->property("isActiveViewSpace").toBool();
+    // read from the parent widget (=KateTabBar) the isActive property
+    return parentWidget()->property("isActive").toBool();
 }
 
 void KateTabButton::setAnimatedGeometry(const QRect & startGeom,

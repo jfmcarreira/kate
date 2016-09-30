@@ -10,6 +10,7 @@ find_package(KF5 REQUIRED COMPONENTS DBusAddons GuiAddons)
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/session
+  ${CMAKE_CURRENT_SOURCE_DIR}/qtsingleapplication
 )
 
 # collect the needed source files
@@ -89,6 +90,25 @@ ${CMAKE_CURRENT_SOURCE_DIR}/icons/sc-apps-kate.svgz
 set (KATE_APP_SRCS
     main.cpp
 )
+
+# use single application instead of dbus on mac + windows
+if (APPLE OR WIN32)
+    set(singleapp_SRCS
+        qtsingleapplication/qtlocalpeer.cpp
+        qtsingleapplication/qtsingleapplication.cpp
+        qtsingleapplication/qtlockedfile.cpp
+    )
+
+    if(WIN32)
+        set(singleapp_SRCS ${singleapp_SRCS} qtsingleapplication/qtlockedfile_win.cpp)
+    else()
+        set(singleapp_SRCS ${singleapp_SRCS} qtsingleapplication/qtlockedfile_unix.cpp)
+    endif()
+
+    add_definitions("-DUSE_QT_SINGLE_APP")
+
+    set(KATE_APP_SRCS ${KATE_APP_SRCS} ${singleapp_SRCS})
+endif()
 
 # add icons to application sources, to have them bundled
 ecm_add_app_icon(KATE_APP_SRCS ICONS ${KATE_ICONS_PNG})
