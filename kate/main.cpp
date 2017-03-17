@@ -51,9 +51,24 @@
 #include "qtsingleapplication/qtsingleapplication.h"
 #endif
 
+#ifndef Q_OS_WIN
+#include <unistd.h>
+#endif
+#include <iostream>
+
 
 int main(int argc, char **argv)
 {
+#ifndef Q_OS_WIN
+    /**
+     * Check whether we are running as root
+     **/
+    if (getuid() == 0) {
+        std::cout << "Executing Kate as root is not possible. To edit files as root use:" << std::endl;
+        std::cout << "SUDO_EDITOR=kate sudoedit <file>" << std::endl;
+        return 0;
+    }
+#endif
     /**
      * init resources from our static lib
      */
@@ -95,7 +110,7 @@ int main(int argc, char **argv)
      */
     KAboutData aboutData(QStringLiteral("kate"), i18n("Kate"), QStringLiteral(KATE_VERSION),
                          i18n("Kate - Advanced Text Editor"), KAboutLicense::LGPL_V2,
-                         i18n("(c) 2000-2016 The Kate Authors"), QString(), QStringLiteral("http://kate-editor.org"));
+                         i18n("(c) 2000-2017 The Kate Authors"), QString(), QStringLiteral("http://kate-editor.org"));
 
     /**
      * right dbus prefix == org.kde.
@@ -167,7 +182,7 @@ int main(int argc, char **argv)
     /**
      * set the program icon
      */
-    QApplication::setWindowIcon(QIcon::fromTheme(QLatin1String("kate")));
+    QApplication::setWindowIcon(QIcon::fromTheme(QLatin1String("kate"), app.windowIcon()));
 
     /**
      * Create command line parser and feed it with known options

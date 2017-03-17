@@ -188,6 +188,7 @@ QPair<KateProjectView *, KateProjectInfoView *> KateProjectPluginView::viewForPr
      */
     m_stackedProjectViews->addWidget(view);
     m_stackedProjectInfoViews->addWidget(infoView);
+    m_stackedProjectInfoViews->setFocusProxy(infoView);
     m_projectsCombo->addItem(QIcon::fromTheme(QStringLiteral("project-open")), project->name(), project->fileName());
 
     /**
@@ -494,6 +495,9 @@ QString KateProjectPluginView::currentWord() const
 
 void KateProjectPluginView::slotProjectIndex()
 {
+    if (!m_toolView) {
+        return;
+    }
     const QString word = currentWord();
     if (!word.isEmpty()) {
         auto tabView = qobject_cast<QTabWidget*>(m_stackedProjectInfoViews->currentWidget());

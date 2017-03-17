@@ -2612,7 +2612,7 @@ writing much of this section.</para>
 <member>Hide/Show Functions Parameters</member>
 <member>Expand/collapse tree mode</member>
 <member>Auto-update on document change</member>
-<member>Code parsing is based on &kate; highlighting</member>
+<member>Code parsing is based on the Syntax-Highlighting framework from &kde-frameworks;</member>
 </simplelist>
 
 </sect2>
@@ -2936,7 +2936,8 @@ open tag on the left.</para>
 <para>The <acronym>DTD</acronym> must exist in &XML; format, as produced by the Perl program
 <command>dtdparse</command>. We will call a DTD in this format <quote>meta DTD</quote>.
 Some meta DTDs are supplied. They are installed in
-<filename class="directory">$KDEDIR/share/apps/katexmltools/</filename>,
+<filename class="directory">katexmltools/</filename> in
+<userinput><command>qtpaths</command> <option>--paths GenericDataLocation </option></userinput>,
 which is also the default folder when you choose
 <guimenuitem>Assign Meta DTD...</guimenuitem>.
 To produce your own meta DTDs, get <command>dtdparse</command> from
@@ -2999,7 +3000,8 @@ current element if you are inside a tag.</para>
 <title>Features and Limitations</title>
 
 <para>You can test all functions and limitations by loading
-<filename>$(kf5-config --prefix)/share/apps/katexmltools/testcases.xml</filename>
+<filename>katexmltools/testcases.xml</filename> in
+<userinput><command>qtpaths</command> <option>--paths GenericDataLocation </option></userinput>
 into &kate; and following the instructions.</para>
 
 </sect2>

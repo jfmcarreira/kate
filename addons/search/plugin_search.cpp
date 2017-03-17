@@ -110,7 +110,7 @@ private:
     }
 };
 
-Results::Results(QWidget *parent): QWidget(parent), matches(0)
+Results::Results(QWidget *parent): QWidget(parent), matches(0), useRegExp(false), searchPlaceIndex(0)
 {
     setupUi(this);
 
@@ -239,6 +239,7 @@ m_mainWindow (mainWin)
     connect(container, SIGNAL(nextFocus(QWidget*,bool*,bool)), this, SLOT(nextFocus(QWidget*,bool*,bool)));
 
     QAction *a = actionCollection()->addAction(QStringLiteral("search_in_files"));
+    actionCollection()->setDefaultShortcut(a, QKeySequence(Qt::CTRL + Qt::ALT + Qt::Key_F));
     a->setText(i18n("Search in Files"));
     connect(a, SIGNAL(triggered(bool)), this, SLOT(openSearchView()));
 
@@ -298,7 +299,19 @@ m_mainWindow (mainWin)
 
     connect(m_ui.searchCombo,      SIGNAL(editTextChanged(QString)), &m_changeTimer, SLOT(start()));
     connect(m_ui.matchCase,        SIGNAL(toggled(bool)), &m_changeTimer, SLOT(start()));
+    connect(m_ui.matchCase, &QToolButton::toggled, this, [this](bool) {
+        Results *res = qobject_cast<Results *>(m_ui.resultTabWidget->currentWidget());
+        if (res) {
+            res->matchCase = m_ui.matchCase->isChecked();
+        }
+    });
     connect(m_ui.useRegExp,        SIGNAL(toggled(bool)), &m_changeTimer, SLOT(start()));
+    connect(m_ui.useRegExp, &QToolButton::toggled, this, [this](bool) {
+        Results *res = qobject_cast<Results *>(m_ui.resultTabWidget->currentWidget());
+        if (res) {
+            res->useRegExp = m_ui.useRegExp->isChecked();
+        }
+    });
     m_changeTimer.setInterval(300);
     m_changeTimer.setSingleShot(true);
     connect(&m_changeTimer, SIGNAL(timeout()), this, SLOT(startSearchWhileTyping()));
@@ -311,6 +324,11 @@ m_mainWindow (mainWin)
 
     connect(m_ui.displayOptions,   SIGNAL(toggled(bool)), this, SLOT(toggleOptions(bool)));
     connect(m_ui.searchPlaceCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(searchPlaceChanged()));
+    connect(m_ui.searchPlaceCombo, static_cast<void (QComboBox::*)(int)>(&QComboBox::currentIndexChanged), this, [this](int) {
+        if (m_ui.searchPlaceCombo->currentIndex() == Folder) {
+            m_ui.displayOptions->setChecked(true);
+        }
+    });
 
     connect(m_ui.stopButton,       SIGNAL(clicked()), &m_searchOpenFiles, SLOT(cancelSearch()));
     connect(m_ui.stopButton,       SIGNAL(clicked()), &m_searchDiskFiles, SLOT(cancelSearch()));
@@ -597,12 +615,8 @@ void KatePluginSearchView::folderFileListChanged()
 
 void KatePluginSearchView::searchPlaceChanged()
 {
-
     int searchPlace = m_ui.searchPlaceCombo->currentIndex();
     const bool inFolder = (searchPlace == Folder);
-    if (inFolder) {
-        m_ui.displayOptions->setChecked(true);
-    }
 
     m_ui.filterCombo->setEnabled(searchPlace >= Folder);
     m_ui.excludeCombo->setEnabled(searchPlace >= Folder);
@@ -622,6 +636,11 @@ void KatePluginSearchView::searchPlaceChanged()
     m_ui.folderLabel->setEnabled(m_ui.folderRequester->isEnabled());
     m_ui.filterLabel->setEnabled(m_ui.filterCombo->isEnabled());
     m_ui.excludeLabel->setEnabled(m_ui.excludeCombo->isEnabled());
+
+    Results *res = qobject_cast<Results *>(m_ui.resultTabWidget->currentWidget());
+    if (res) {
+        res->searchPlaceIndex = searchPlace;
+    }
 }
 
 void KatePluginSearchView::addHeaderItem()
@@ -857,10 +876,14 @@ void KatePluginSearchView::startSearch()
         return;
     }
 
-    if (m_ui.searchCombo->findText(m_ui.searchCombo->currentText()) == -1) {
-        m_ui.searchCombo->insertItem(1, m_ui.searchCombo->currentText());
-        m_ui.searchCombo->setCurrentIndex(1);
+    QString currentSearchText = m_ui.searchCombo->currentText();
+    m_ui.searchCombo->setItemText(0, QString()); // remove the text from index 0 on enter/search
+    int index = m_ui.searchCombo->findText(currentSearchText);
+    if (index > 0) {
+        m_ui.searchCombo->removeItem(index);
     }
+    m_ui.searchCombo->insertItem(1, currentSearchText);
+    m_ui.searchCombo->setCurrentIndex(1);
 
     if (m_ui.filterCombo->findText(m_ui.filterCombo->currentText()) == -1) {
         m_ui.filterCombo->insertItem(0, m_ui.filterCombo->currentText());
@@ -881,7 +904,7 @@ void KatePluginSearchView::startSearch()
     }
 
     QRegularExpression::PatternOptions patternOptions = (m_ui.matchCase->isChecked() ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
-    QString pattern = (m_ui.useRegExp->isChecked() ? m_ui.searchCombo->currentText() : QRegularExpression::escape(m_ui.searchCombo->currentText()));
+    QString pattern = (m_ui.useRegExp->isChecked() ? currentSearchText : QRegularExpression::escape(currentSearchText));
     QRegularExpression reg(pattern, patternOptions);
 
     if (!reg.isValid()) {
@@ -891,7 +914,9 @@ void KatePluginSearchView::startSearch()
     }
 
     m_curResults->regExp = reg;
-    m_curResults->fixedString = !m_ui.useRegExp->isChecked();
+    m_curResults->useRegExp = m_ui.useRegExp->isChecked();
+    m_curResults->matchCase = m_ui.matchCase->isChecked();
+    m_curResults->searchPlaceIndex = m_ui.searchPlaceCombo->currentIndex();
 
     m_ui.newTabButton->setDisabled(true);
     m_ui.searchCombo->setDisabled(true);
@@ -900,14 +925,20 @@ void KatePluginSearchView::startSearch()
     m_ui.displayOptions->setDisabled(true);
     m_ui.replaceCheckedBtn->setDisabled(true);
     m_ui.replaceButton->setDisabled(true);
-    m_ui.stopAndReplace->setCurrentIndex(1);
+    m_ui.stopAndNext->setCurrentIndex(1);
     m_ui.replaceCombo->setDisabled(true);
+    m_ui.searchPlaceCombo->setDisabled(true);
+    m_ui.useRegExp->setDisabled(true);
+    m_ui.matchCase->setDisabled(true);
+    m_ui.expandResults->setDisabled(true);
+    m_ui.currentFolderButton->setDisabled(true);
 
 
     clearMarks();
     m_curResults->tree->clear();
     m_curResults->tree->setCurrentItem(nullptr);
     m_curResults->matches = 0;
+
 
     m_ui.resultTabWidget->setTabText(m_ui.resultTabWidget->currentIndex(),
                                      m_ui.searchCombo->currentText());
@@ -1003,27 +1034,36 @@ void KatePluginSearchView::startSearchWhileTyping()
         return;
     }
 
-    m_ui.searchButton->setDisabled(m_ui.searchCombo->currentText().isEmpty());
+    QString currentSearchText = m_ui.searchCombo->currentText();
+
+    m_ui.searchButton->setDisabled(currentSearchText.isEmpty());
+
+    // Do not clear the search results if you press up by mistake
+    if (currentSearchText.isEmpty()) return;
 
     if (!m_mainWindow->activeView()) return;
 
     KTextEditor::Document *doc = m_mainWindow->activeView()->document();
     if (!doc) return;
 
-    m_resultBaseDir.clear();
     m_curResults =qobject_cast<Results *>(m_ui.resultTabWidget->currentWidget());
     if (!m_curResults) {
         qWarning() << "This is a bug";
         return;
     }
 
-    clearMarks();
-    m_curResults->tree->clear();
-    m_curResults->tree->setCurrentItem(nullptr);
-    m_curResults->matches = 0;
+    // check if we typed something or just changed combobox index
+    // changing index should not trigger a search-as-you-type
+    if (m_ui.searchCombo->currentIndex() > 0 &&
+        currentSearchText == m_ui.searchCombo->itemText(m_ui.searchCombo->currentIndex()))
+    {
+        return;
+    }
+
+    // Now we should have a true typed text change
 
     QRegularExpression::PatternOptions patternOptions = (m_ui.matchCase->isChecked() ? QRegularExpression::NoPatternOption : QRegularExpression::CaseInsensitiveOption);
-    QString pattern = (m_ui.useRegExp->isChecked() ? m_ui.searchCombo->currentText() : QRegularExpression::escape(m_ui.searchCombo->currentText()));
+    QString pattern = (m_ui.useRegExp->isChecked() ? currentSearchText : QRegularExpression::escape(currentSearchText));
     QRegularExpression reg(pattern, patternOptions);
     if (!reg.isValid()) {
         //qDebug() << "invalid regexp";
@@ -1032,14 +1072,33 @@ void KatePluginSearchView::startSearchWhileTyping()
     }
 
     m_curResults->regExp = reg;
-    m_curResults->fixedString = !m_ui.useRegExp->isChecked();
+    m_curResults->useRegExp = m_ui.useRegExp->isChecked();
 
     m_ui.replaceCheckedBtn->setDisabled(true);
     m_ui.replaceButton->setDisabled(true);
     m_ui.nextButton->setDisabled(true);
 
+    int cursorPosition = m_ui.searchCombo->lineEdit()->cursorPosition();
+    bool hasSelected = m_ui.searchCombo->lineEdit()->hasSelectedText();
+    m_ui.searchCombo->blockSignals(true);
+    m_ui.searchCombo->setItemText(0, currentSearchText);
+    m_ui.searchCombo->setCurrentIndex(0);
+    m_ui.searchCombo->lineEdit()->setCursorPosition(cursorPosition);
+    if (hasSelected) {
+        // This restores the select all from invoking openSearchView
+        // This selects too much if we have a partial selection and toggle match-case/regexp
+        m_ui.searchCombo->lineEdit()->selectAll();
+    }
+    m_ui.searchCombo->blockSignals(false);
 
-    // add header item
+    // Prepare for the new search content
+    clearMarks();
+    m_resultBaseDir.clear();
+    m_curResults->tree->clear();
+    m_curResults->tree->setCurrentItem(nullptr);
+    m_curResults->matches = 0;
+
+    // Add the search-as-you-type header item
     TreeWidgetItem *item = new TreeWidgetItem(m_curResults->tree, QStringList());
     item->setData(0, ReplaceMatches::FileUrlRole, doc->url().toString());
     item->setData(0, ReplaceMatches::FileNameRole, doc->documentName());
@@ -1047,10 +1106,20 @@ void KatePluginSearchView::startSearchWhileTyping()
     item->setCheckState(0, Qt::Checked);
     item->setFlags(item->flags() | Qt::ItemIsTristate);
 
-    if (m_ui.searchCombo->currentText().length() >= 2) {
-        m_searchOpenFiles.searchOpenFile(doc, reg, 0);
-    }
+    // Do the search
+    int searchStoppedAt = m_searchOpenFiles.searchOpenFile(doc, reg, 0);
     searchWhileTypingDone();
+
+    if (searchStoppedAt != 0) {
+        delete m_infoMessage;
+        const QString msg = i18n("Searching while you type was interrupted. It would have taken too long.");
+        m_infoMessage = new KTextEditor::Message(msg, KTextEditor::Message::Warning);
+        m_infoMessage->setPosition(KTextEditor::Message::TopInView);
+        m_infoMessage->setAutoHide(3000);
+        m_infoMessage->setAutoHideMode(KTextEditor::Message::Immediate);
+        m_infoMessage->setView(m_mainWindow->activeView());
+        m_mainWindow->activeView()->document()->postMessage(m_infoMessage);
+    }
 }
 
 
@@ -1069,12 +1138,20 @@ void KatePluginSearchView::searchDone()
         return;
     }
 
+    QWidget* fw = QApplication::focusWidget();
+    // NOTE: we take the focus widget here before the enabling/disabling
+    // moves the focus around.
     m_ui.newTabButton->setDisabled(false);
     m_ui.searchCombo->setDisabled(false);
     m_ui.searchButton->setDisabled(false);
-    m_ui.stopAndReplace->setCurrentIndex(0);
+    m_ui.stopAndNext->setCurrentIndex(0);
     m_ui.displayOptions->setDisabled(false);
     m_ui.replaceCombo->setDisabled(false);
+    m_ui.searchPlaceCombo->setDisabled(false);
+    m_ui.useRegExp->setDisabled(false);
+    m_ui.matchCase->setDisabled(false);
+    m_ui.expandResults->setDisabled(false);
+    m_ui.currentFolderButton->setDisabled(false);
 
     if (!m_curResults) {
         return;
@@ -1145,6 +1222,11 @@ void KatePluginSearchView::searchDone()
     indicateMatch(m_curResults->matches > 0);
     m_curResults = 0;
     m_toolView->unsetCursor();
+
+    if (fw == m_ui.stopButton) {
+        m_ui.searchCombo->setFocus();
+    }
+
     m_searchJustOpened = false;
 }
 
@@ -1172,7 +1254,6 @@ void KatePluginSearchView::searchWhileTypingDone()
         QTreeWidgetItem *child = root->child(0);
         if (!m_searchJustOpened) {
             focusObject = qobject_cast<QWidget *>(QGuiApplication::focusObject());
-            itemSelected(child);
         }
         indicateMatch(child);
 
@@ -1348,19 +1429,19 @@ void KatePluginSearchView::replaceChecked()
         return;
     }
 
-    m_ui.stopAndReplace->setCurrentIndex(1);
+    m_ui.stopAndNext->setCurrentIndex(1);
     m_ui.displayOptions->setChecked(false);
 
-    m_curResults->replace = m_ui.replaceCombo->currentText();
+    m_curResults->replaceStr = m_ui.replaceCombo->currentText();
 
     m_replacer.replaceChecked(m_curResults->tree,
                               m_curResults->regExp,
-                              m_curResults->replace);
+                              m_curResults->replaceStr);
 }
 
 void KatePluginSearchView::replaceDone()
 {
-    m_ui.stopAndReplace->setCurrentIndex(0);
+    m_ui.stopAndNext->setCurrentIndex(0);
     m_ui.replaceCombo->setDisabled(false);
 }
 
@@ -1471,14 +1552,21 @@ void KatePluginSearchView::itemSelected(QTreeWidgetItem *item)
 void KatePluginSearchView::goToNextMatch()
 {
     bool wrapFromFirst = false;
+    bool startFromFirst = false;
+    bool startFromCursor = false;
     Results *res = qobject_cast<Results *>(m_ui.resultTabWidget->currentWidget());
     if (!res) {
         return;
     }
     QTreeWidgetItem *curr = res->tree->currentItem();
-    if (!curr) {
-        // no item has been visited -> jump to the closest match after current cursor position
-        // check if current file is in the file
+
+    bool focusInView = m_mainWindow->activeView() && m_mainWindow->activeView()->hasFocus();
+
+    if (!curr && focusInView) {
+        // no item has been visited && focus is not in searchCombo (probably in the view) ->
+        // jump to the closest match after current cursor position
+
+        // check if current file is in the file list
         curr = res->tree->topLevelItem(0);
         while (curr && curr->data(0, ReplaceMatches::FileUrlRole).toString() != m_mainWindow->activeView()->document()->url().toString()) {
             curr = res->tree->itemBelow(curr);
@@ -1503,7 +1591,7 @@ void KatePluginSearchView::goToNextMatch()
                 curr->data(0, ReplaceMatches::FileUrlRole).toString() == m_mainWindow->activeView()->document()->url().toString())
             {
                 if (curr->data(0, ReplaceMatches::LineRole).toInt() == lineNr &&
-                    curr->data(0, ReplaceMatches::ColumnRole).toInt() > columnNr)
+                    curr->data(0, ReplaceMatches::ColumnRole).toInt() >= columnNr - curr->data(0, ReplaceMatches::MatchLenRole).toInt())
                 {
                     break;
                 }
@@ -1511,11 +1599,13 @@ void KatePluginSearchView::goToNextMatch()
                 curr = res->tree->itemBelow(curr);
             }
             curr = fileBefore;
+            startFromCursor = true;
         }
 
-        if (!curr) {
-            curr = res->tree->topLevelItem(0);
-        }
+    }
+    if (!curr) {
+        curr = res->tree->topLevelItem(0);
+        startFromFirst = true;
     }
     if (!curr) return;
 
@@ -1529,7 +1619,27 @@ void KatePluginSearchView::goToNextMatch()
 
     itemSelected(curr);
 
-    if (wrapFromFirst) {
+    if (startFromFirst) {
+        delete m_infoMessage;
+        const QString msg = i18n("Starting from first match");
+        m_infoMessage = new KTextEditor::Message(msg, KTextEditor::Message::Information);
+        m_infoMessage->setPosition(KTextEditor::Message::TopInView);
+        m_infoMessage->setAutoHide(2000);
+        m_infoMessage->setAutoHideMode(KTextEditor::Message::Immediate);
+        m_infoMessage->setView(m_mainWindow->activeView());
+        m_mainWindow->activeView()->document()->postMessage(m_infoMessage);
+    }
+    else if (startFromCursor) {
+        delete m_infoMessage;
+        const QString msg = i18n("Next from cursor");
+        m_infoMessage = new KTextEditor::Message(msg, KTextEditor::Message::Information);
+        m_infoMessage->setPosition(KTextEditor::Message::BottomInView);
+        m_infoMessage->setAutoHide(2000);
+        m_infoMessage->setAutoHideMode(KTextEditor::Message::Immediate);
+        m_infoMessage->setView(m_mainWindow->activeView());
+        m_mainWindow->activeView()->document()->postMessage(m_infoMessage);
+    }
+    else if (wrapFromFirst) {
         delete m_infoMessage;
         const QString msg = i18n("Continuing from first match");
         m_infoMessage = new KTextEditor::Message(msg, KTextEditor::Message::Information);
@@ -1668,10 +1778,10 @@ void KatePluginSearchView::readSessionConfig(const KConfigGroup &cg)
     m_ui.folderRequester->setText(cg.readEntry("SearchDiskFiles", QString()));
     m_ui.filterCombo->clear();
     m_ui.filterCombo->addItems(cg.readEntry("Filters", QStringList()));
-    m_ui.filterCombo->setCurrentIndex(cg.readEntry("CurrentFilter", 0));
+    m_ui.filterCombo->setCurrentIndex(cg.readEntry("CurrentFilter", -1));
     m_ui.excludeCombo->clear();
     m_ui.excludeCombo->addItems(cg.readEntry("ExcludeFilters", QStringList()));
-    m_ui.excludeCombo->setCurrentIndex(cg.readEntry("CurrentExcludeFilter", 0));
+    m_ui.excludeCombo->setCurrentIndex(cg.readEntry("CurrentExcludeFilter", -1));
     m_ui.displayOptions->setChecked(searchPlaceIndex == Folder);
 }
 
@@ -1708,14 +1818,14 @@ void KatePluginSearchView::writeSessionConfig(KConfigGroup &cg)
         filterItems << m_ui.filterCombo->itemText(i);
     }
     cg.writeEntry("Filters", filterItems);
-    cg.writeEntry("CurrentFilter", m_ui.filterCombo->currentIndex());
+    cg.writeEntry("CurrentFilter", m_ui.filterCombo->findText(m_ui.filterCombo->currentText()));
 
     QStringList excludeFilterItems;
     for (int i=0; i<qMin(m_ui.excludeCombo->count(), 10); i++) {
         excludeFilterItems << m_ui.excludeCombo->itemText(i);
     }
     cg.writeEntry("ExcludeFilters", excludeFilterItems);
-    cg.writeEntry("CurrentExcludeFilter", m_ui.excludeCombo->currentIndex());
+    cg.writeEntry("CurrentExcludeFilter", m_ui.excludeCombo->findText(m_ui.excludeCombo->currentText()));
 }
 
 void KatePluginSearchView::addTab()
@@ -1734,6 +1844,9 @@ void KatePluginSearchView::addTab()
     connect(res->tree, SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
             this,      SLOT  (itemSelected(QTreeWidgetItem*)), Qt::QueuedConnection);
 
+    res->searchPlaceIndex = m_ui.searchPlaceCombo->currentIndex();
+    res->useRegExp = m_ui.useRegExp->isChecked();
+    res->matchCase = m_ui.matchCase->isChecked();
     m_ui.resultTabWidget->addTab(res, QString());
     m_ui.resultTabWidget->setCurrentIndex(m_ui.resultTabWidget->count()-1);
     m_ui.stackedWidget->setCurrentIndex(0);
@@ -1764,38 +1877,26 @@ void KatePluginSearchView::resultTabChanged(int index)
     if (index < 0) {
         return;
     }
-    // empty tab -> nothing to set.
-    if (m_ui.resultTabWidget->tabText(index).isEmpty()) {
-        return;
-    }
 
     Results *res = qobject_cast<Results *>(m_ui.resultTabWidget->widget(index));
     if (!res) {
-        return;
-    }
-    // check if the text has been modified
-    int i;
-    for (i=0; i<m_ui.resultTabWidget->count(); i++) {
-        if ((m_ui.resultTabWidget->tabText(i) == m_ui.searchCombo->currentText()) &&
-            !m_ui.resultTabWidget->tabText(i).isEmpty())
-        {
-            break;
-        }
-    }
-    if (i == m_ui.resultTabWidget->count()) {
-        // the text does not match a tab -> do not update the search
+        qDebug() << "No res found";
         return;
     }
 
     m_ui.searchCombo->blockSignals(true);
     m_ui.matchCase->blockSignals(true);
     m_ui.useRegExp->blockSignals(true);
+    m_ui.searchPlaceCombo->blockSignals(true);
     m_ui.searchCombo->lineEdit()->setText(m_ui.resultTabWidget->tabText(index));
-    m_ui.matchCase->setChecked(res->regExp.patternOptions() != QRegularExpression::CaseInsensitiveOption);
-    m_ui.useRegExp->setChecked(!res->fixedString);
+    m_ui.useRegExp->setChecked(res->useRegExp);
+    m_ui.matchCase->setChecked(res->matchCase);
+    m_ui.searchPlaceCombo->setCurrentIndex(res->searchPlaceIndex);
     m_ui.searchCombo->blockSignals(false);
     m_ui.matchCase->blockSignals(false);
     m_ui.useRegExp->blockSignals(false);
+    m_ui.searchPlaceCombo->blockSignals(false);
+    searchPlaceChanged();
 }
 
 
@@ -1918,7 +2019,7 @@ void KatePluginSearchView::slotProjectFileNameChanged ()
             if (m_switchToProjectModeWhenAvailable) {
                 // switch to search "in Project"
                 m_switchToProjectModeWhenAvailable = false;
-                setSearchPlace (Project);
+                setSearchPlace(Project);
             }
 
             // add "in Open Projects"
@@ -1949,7 +2050,7 @@ KateSearchCommand::KateSearchCommand(QObject *parent)
 {
 }
 
-bool KateSearchCommand::exec (KTextEditor::View* /*view*/, const QString& cmd, QString& /*msg*/, const KTextEditor::Range &)
+bool KateSearchCommand::exec(KTextEditor::View* /*view*/, const QString& cmd, QString& /*msg*/, const KTextEditor::Range &)
 {
     //create a list of args
     QStringList args(cmd.split(QLatin1Char(' '), QString::KeepEmptyParts));
@@ -1981,7 +2082,7 @@ bool KateSearchCommand::exec (KTextEditor::View* /*view*/, const QString& cmd, Q
     return true;
 }
 
-bool KateSearchCommand::help (KTextEditor::View */*view*/, const QString &cmd, QString & msg)
+bool KateSearchCommand::help(KTextEditor::View */*view*/, const QString &cmd, QString & msg)
 {
     if (cmd.startsWith(QStringLiteral("grep"))) {
         msg = i18n("Usage: grep [pattern to search for in folder]");
