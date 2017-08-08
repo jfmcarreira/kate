@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KTextEditor/Plugin
+X-KDE-Library=katetikzviewerplugin
+Name=Tikz viewer for kate

@@ -8,6 +8,9 @@ set_package_properties(KF5ItemModels PROPERTIES PURPOSE "Required to build the p
 set_package_properties(KF5ThreadWeaver PROPERTIES PURPOSE "Required to build the project addon")
 set_package_properties(KF5NewStuff PROPERTIES PURPOSE "Required to build the snippets and project addons")
 
+# tikz viewer
+ecm_optional_add_subdirectory (tikzviewer)
+
 # document switcher
 ecm_optional_add_subdirectory (filetree)
 
